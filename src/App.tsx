@@ -30,8 +30,10 @@ function App() {
                 Click on the Vite and React logos to learn more
             </p>
             <div>
-                <p style={{ color: theme.palette.primary.main }}>↓ Boutons temporaires pour naviguer vers les pages ↓</p>
+                <p style={{color: theme.palette.primary.main}}>↓ Boutons temporaires pour naviguer vers les pages ↓</p>
+
                 <button onClick={() => window.location.href = '/statstotales'}>Stats totales</button>
+                <button onClick={() => window.location.href = '/grapheemprunts'}>Graphe emprunts</button>
             </div>
         </>
     )
