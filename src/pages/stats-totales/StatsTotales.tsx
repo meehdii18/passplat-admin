@@ -64,10 +64,9 @@ const StatsTotales: React.FC = () => {
     return (
         <Container>
             <Typography variant="h4" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
-
             Stats Totales
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={2.5}>
                 {[
                     { label: "Nombre d'Utilisateurs", value: stats.nombreUtilisateur },
                     { label: "Nombre de Diffuseurs", value: stats.nombreDiffuseur },
@@ -76,7 +75,7 @@ const StatsTotales: React.FC = () => {
                     { label: "Nombre d'Emprunts Total", value: stats.nombreEmpruntTotal },
                     { label: "Nombre d'Emprunts Rendus", value: stats.nombreEmpruntRendu },
                     { label: "Nombre d'Emprunts En Cours", value: stats.nombreEmpruntEnCours },
-                    { label: "Stock Contenant Total", value: stats.stockContenantTotal }
+                    { label: "Stock Contenants Total", value: stats.stockContenantTotal }
                 ].map((stat, index) => (
                     <Grid key={index}>
                         <Card sx={{ backgroundColor: theme.palette.secondary.main }}>
@@ -88,7 +87,7 @@ const StatsTotales: React.FC = () => {
                     </Grid>
                 ))}
                 <Grid>
-                    <Paper elevation={3} style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
+                    <Paper style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
                         <Typography variant="h6">Nombre Emprunt Par Contenant</Typography>
                         <Typography variant="body1">S: {stats.nombreEmpruntParContenant.S}</Typography>
                         <Typography variant="body1">XL: {stats.nombreEmpruntParContenant.XL}</Typography>
@@ -96,7 +95,7 @@ const StatsTotales: React.FC = () => {
                     </Paper>
                 </Grid>
                 <Grid>
-                    <Paper elevation={3} style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
+                    <Paper style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
                         <Typography variant="h6">Stock Contenant Par Type</Typography>
                         <Typography variant="body1">S: {stats.stockContenantParType.S}</Typography>
                         <Typography variant="body1">XL: {stats.stockContenantParType.XL}</Typography>
