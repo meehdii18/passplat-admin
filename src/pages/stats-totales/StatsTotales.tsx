@@ -36,7 +36,7 @@ const StatsTotales: React.FC = () => {
             try {
                 const response = await axios.get<Stats>('http://localhost:8080/stats');
                 setStats(response.data);
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (err) {
                 setError('Failed to fetch stats');
             } finally {
