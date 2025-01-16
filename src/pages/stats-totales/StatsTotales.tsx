@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Container, Card, CardContent, Typography, Paper } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import { useTheme } from '@mui/material/styles';
 
 
 
@@ -30,6 +31,7 @@ const StatsTotales: React.FC = () => {
     const [stats, setStats] = useState<Stats | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const theme = useTheme()
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -61,8 +63,9 @@ const StatsTotales: React.FC = () => {
 
     return (
         <Container>
-            <Typography variant="h4" gutterBottom>
-                Stats Totales
+            <Typography variant="h4" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
+
+            Stats Totales
             </Typography>
             <Grid container spacing={3}>
                 {[
@@ -73,9 +76,10 @@ const StatsTotales: React.FC = () => {
                     { label: "Nombre d'Emprunts Total", value: stats.nombreEmpruntTotal },
                     { label: "Nombre d'Emprunts Rendus", value: stats.nombreEmpruntRendu },
                     { label: "Nombre d'Emprunts En Cours", value: stats.nombreEmpruntEnCours },
+                    { label: "Stock Contenant Total", value: stats.stockContenantTotal }
                 ].map((stat, index) => (
                     <Grid key={index}>
-                        <Card>
+                        <Card sx={{ backgroundColor: theme.palette.secondary.main }}>
                             <CardContent>
                                 <Typography variant="h6">{stat.label}</Typography>
                                 <Typography variant="body1">{stat.value}</Typography>
@@ -84,7 +88,7 @@ const StatsTotales: React.FC = () => {
                     </Grid>
                 ))}
                 <Grid>
-                    <Paper elevation={3} style={{ padding: "1rem" }}>
+                    <Paper elevation={3} style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
                         <Typography variant="h6">Nombre Emprunt Par Contenant</Typography>
                         <Typography variant="body1">S: {stats.nombreEmpruntParContenant.S}</Typography>
                         <Typography variant="body1">XL: {stats.nombreEmpruntParContenant.XL}</Typography>
@@ -92,13 +96,7 @@ const StatsTotales: React.FC = () => {
                     </Paper>
                 </Grid>
                 <Grid>
-                    <Paper elevation={3} style={{ padding: "1rem" }}>
-                        <Typography variant="h6">Stock Contenant Total</Typography>
-                        <Typography variant="body1">{stats.stockContenantTotal}</Typography>
-                    </Paper>
-                </Grid>
-                <Grid>
-                    <Paper elevation={3} style={{ padding: "1rem" }}>
+                    <Paper elevation={3} style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
                         <Typography variant="h6">Stock Contenant Par Type</Typography>
                         <Typography variant="body1">S: {stats.stockContenantParType.S}</Typography>
                         <Typography variant="body1">XL: {stats.stockContenantParType.XL}</Typography>
