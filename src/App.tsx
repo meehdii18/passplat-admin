@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import theme from "./theme.ts";
+import {Button} from "@mui/material";
 
 function App() {
     const [count, setCount] = useState(0)
@@ -32,8 +33,10 @@ function App() {
             <div>
                 <p style={{color: theme.palette.primary.main}}>↓ Boutons temporaires pour naviguer vers les pages ↓</p>
 
-                <button onClick={() => window.location.href = '/statstotales'}>Stats totales</button>
-                <button onClick={() => window.location.href = '/grapheemprunts'}>Graphe emprunts</button>
+                <Button variant="contained" onClick={() => window.location.href = '/statstotales'}>Stats totales</Button>
+                <Button variant="contained" onClick={() => window.location.href = '/grapheemprunts'}>Graphe emprunts</Button>
+                <Button variant="contained" onClick={() => window.location.href = '/statsdiffuseur'}>Stats diffuseur</Button>
+                <Button variant="contained" onClick={() => window.location.href = '/statsempruntsperiode'}>Stats emprunts période</Button>
             </div>
         </>
     )

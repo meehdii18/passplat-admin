@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 import { Box, CircularProgress, Typography } from "@mui/material";
@@ -23,7 +23,7 @@ ChartJS.register(CategoryScale, LinearScale, TimeScale, PointElement, LineElemen
 const GrapheEmprunts = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchEmprunts = async () => {
@@ -32,7 +32,7 @@ const GrapheEmprunts = () => {
                 const emprunts = response.data;
 
                 // Transformation des données, on associe un nombre total d'emprunts chaque date
-                const empruntsRefactored = emprunts.reduce((acc, curr) => {
+                const empruntsRefactored = emprunts.reduce((acc: { [x: string]: any; }, curr: { dateEmprunt: string | number | Date; quantite: any; }) => {
                     const date = new Date(curr.dateEmprunt).toISOString().split("T")[0]; // Format YYYY-MM-DD
                     acc[date] = (acc[date] || 0) + curr.quantite;
                     return acc;
@@ -51,8 +51,20 @@ const GrapheEmprunts = () => {
                         },
                     ],
                 });
-            } catch (error) {
-                setError("Erreur lors du chargement des données.");
+            } catch (err) {
+                if (axios.isAxiosError(err)) { // On spécifie qu'il s'agit d'erreurs axios
+                    if (err.response) {
+                        if (err.response.status >= 500) {
+                            setError('Erreur interne, veuillez réessayer plus tard');
+                        } else {
+                            setError('Serveur inaccessible ou indisponible');
+                        }
+                    } else if (err.request) {
+                        setError('Impossible de contacter le serveur, veuillez vérifier votre réseau');
+                    } else {
+                        setError('Erreur interne, veuillez réessayer plus tard');
+                    }
+                }
             } finally {
                 setLoading(false);
             }

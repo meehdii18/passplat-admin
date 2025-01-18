@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Container, Card, CardContent, Typography, Paper } from '@mui/material';
+import {Container, Card, CardContent, Typography, Paper, CircularProgress} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 
@@ -38,9 +38,20 @@ const StatsTotales: React.FC = () => {
             try {
                 const response = await axios.get<Stats>('http://localhost:8080/stats');
                 setStats(response.data);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (err) {
-                setError('Failed to fetch stats');
+                if (axios.isAxiosError(err)) { // On spécifie qu'il s'agit d'erreurs axios
+                    if (err.response) {
+                        if (err.response.status >= 500) {
+                            setError('Erreur interne, veuillez réessayer plus tard');
+                        } else {
+                            setError('Serveur inaccessible ou indisponible');
+                        }
+                    } else if (err.request) {
+                        setError('Impossible de contacter le serveur, veuillez vérifier votre réseau');
+                    } else {
+                        setError('Erreur interne, veuillez réessayer plus tard');
+                    }
+                }
             } finally {
                 setLoading(false);
             }
@@ -48,25 +59,21 @@ const StatsTotales: React.FC = () => {
 
         fetchStats();
     }, []);
-
-    if (loading) {
-        return <Typography>Loading...</Typography>;
-    }
-
     if (error) {
         return <Typography>{error}</Typography>;
     }
 
     if (!stats) {
-        return <Typography>No data available</Typography>;
+        return <Typography>Erreur du chargement des données</Typography>
     }
 
     return (
         <Container>
+            {loading && <CircularProgress />}
             <Typography variant="h4" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
             Stats Totales
             </Typography>
-            <Grid container spacing={2.5}>
+            <Grid container spacing={2}>
                 {[
                     { label: "Nombre d'Utilisateurs", value: stats.nombreUtilisateur },
                     { label: "Nombre de Diffuseurs", value: stats.nombreDiffuseur },
@@ -75,7 +82,8 @@ const StatsTotales: React.FC = () => {
                     { label: "Nombre d'Emprunts Total", value: stats.nombreEmpruntTotal },
                     { label: "Nombre d'Emprunts Rendus", value: stats.nombreEmpruntRendu },
                     { label: "Nombre d'Emprunts En Cours", value: stats.nombreEmpruntEnCours },
-                    { label: "Stock Contenants Total", value: stats.stockContenantTotal }
+                    { label: "Ratio Emprunts Rendus/Total", value: stats.nombreEmpruntTotal > 0 ? `${(stats.nombreEmpruntRendu / stats.nombreEmpruntTotal * 100).toFixed(2)}%` : 'N/A' },
+                    { label: "Émission carbone évitée au total", value: "TBD" }
                 ].map((stat, index) => (
                     <Grid key={index}>
                         <Card sx={{ backgroundColor: theme.palette.secondary.main }}>
