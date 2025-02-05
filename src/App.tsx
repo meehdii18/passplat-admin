@@ -1,43 +1,33 @@
-import {useState} from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import theme from "./theme.ts";
-import {Button} from "@mui/material";
+import {Box, Tab, Tabs} from "@mui/material";
+import React from "react";
+import StatsTotales from "./pages/stats-totales/StatsTotales.tsx";
+import GrapheEmprunts from "./pages/graphe-emprunts/GrapheEmprunts.tsx";
+import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur.tsx";
+import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode.tsx";
 
 function App() {
-    const [count, setCount] = useState(0)
+    const [selectedTab, setSelectedTab] = React.useState(1);
+
+    function handleTabChange(_event: React.SyntheticEvent, newTabValue: number) {
+        setSelectedTab(newTabValue);
+    }
 
     return (
         <>
-            <div>
-                <a href="https://vite.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo"/>
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo"/>
-                </a>
-            </div>
-            <h1>Vite + React</h1>
-            <div className="card">
-                <button onClick={() => setCount((count) => count + 1)}>
-                    count is {count}
-                </button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
-            </div>
-            <p className="read-the-docs">
-                Click on the Vite and React logos to learn more
-            </p>
-            <div>
-                <p style={{color: theme.palette.primary.main}}>↓ Boutons temporaires pour naviguer vers les pages ↓</p>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: 2 }}>
+                <Tabs value={selectedTab} onChange={handleTabChange} aria-label="basic tabs example">
+                    <Tab label="Stats totales" value={1}/>
+                    <Tab label="Graphe emprunts" value={2}/>
+                    <Tab label="Stats diffuseur" value={3}/>
+                    <Tab label="Stats emprunts période" value={4}/>
+                </Tabs>
+            </Box>
 
-                <Button variant="contained" onClick={() => window.location.href = '/statstotales'}>Stats totales</Button>
-                <Button variant="contained" onClick={() => window.location.href = '/grapheemprunts'}>Graphe emprunts</Button>
-                <Button variant="contained" onClick={() => window.location.href = '/statsdiffuseur'}>Stats diffuseur</Button>
-                <Button variant="contained" onClick={() => window.location.href = '/statsempruntsperiode'}>Stats emprunts période</Button>
-            </div>
+            {selectedTab == 1 && <StatsTotales></StatsTotales>}
+            {selectedTab == 2 && <GrapheEmprunts></GrapheEmprunts>}
+            {selectedTab == 3 && <StatsDiffuseur></StatsDiffuseur>}
+            {selectedTab == 4 && <StatsEmpruntsPeriode></StatsEmpruntsPeriode>}
         </>
     )
 }
