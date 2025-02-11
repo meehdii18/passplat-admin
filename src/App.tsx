@@ -5,6 +5,7 @@ import StatsTotales from "./pages/stats-totales/StatsTotales.tsx";
 import GrapheEmprunts from "./pages/graphe-emprunts/GrapheEmprunts.tsx";
 import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur.tsx";
 import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode.tsx";
+import Connexion from './pages/connexion/Connexion.tsx';
 
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);
@@ -21,6 +22,7 @@ function App() {
                     <Tab label="Graphe emprunts" value={2}/>
                     <Tab label="Stats diffuseur" value={3}/>
                     <Tab label="Stats emprunts période" value={4}/>
+                    <Tab label="Connexion" value={5}/>
                 </Tabs>
             </Box>
 
@@ -28,6 +30,7 @@ function App() {
             {selectedTab == 2 && <GrapheEmprunts></GrapheEmprunts>}
             {selectedTab == 3 && <StatsDiffuseur></StatsDiffuseur>}
             {selectedTab == 4 && <StatsEmpruntsPeriode></StatsEmpruntsPeriode>}
+            {selectedTab == 5 && <Connexion></Connexion>}
         </>
     )
 }
