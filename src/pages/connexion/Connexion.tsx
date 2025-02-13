@@ -7,6 +7,7 @@ import {
     Typography,
     Paper,
 } from '@mui/material';
+import axios from "axios";
 
 const Connexion: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -16,6 +17,18 @@ const Connexion: React.FC = () => {
         event.preventDefault();
         // TODO : Ajouter la logique ici
         console.log('Email:', email, 'Password:', password);
+
+        axios.post('http://localhost:8080/account/loginAdmin', { email, password })
+            .then(response => {
+                if (response.status === 200) {
+                    console.log('Connexion réussie');
+                } else {
+                    console.log('Échec de la connexion');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
     };
 
     return (
