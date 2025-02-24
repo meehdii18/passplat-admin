@@ -1,5 +1,5 @@
 import './App.css';
-import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Tab, Tabs, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import React from "react";
 import { useAuth } from './contexts/AuthContext';
 import StatsTotales from "./pages/stats-totales/StatsTotales";
@@ -13,10 +13,25 @@ import { authService } from './services/auth.service.ts';
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);
     const { isAuthenticated, logout, user } = useAuth();
+    const [openLogoutDialog, setOpenLogoutDialog] = React.useState(false);
 
     function handleTabChange(_event: React.SyntheticEvent, newTabValue: number) {
         setSelectedTab(newTabValue);
     }
+
+    const handleLogoutClick = () => {
+        setOpenLogoutDialog(true);
+    };
+
+    const handleLogoutConfirm = () => {
+        logout();
+        window.location.href = '/';
+        setOpenLogoutDialog(false);
+    };
+
+    const handleLogoutCancel = () => {
+        setOpenLogoutDialog(false);
+    };
 
     if (!isAuthenticated) {
         return <Connexion />;
@@ -44,10 +59,7 @@ function App() {
                             : 'Bonjour'}
                     </Typography>
                 <Button 
-                    onClick={() => {
-                        logout();
-                        window.location.href = '/';
-                    }}
+                    onClick={handleLogoutClick}
                     variant="outlined"
                     color="primary"
                     sx={{ ml: 2 }} 
@@ -55,6 +67,27 @@ function App() {
                     Déconnexion
                 </Button>
             </Box>
+
+            <Dialog
+                open={openLogoutDialog}
+                onClose={handleLogoutCancel}
+                aria-labelledby="logout-dialog-title"
+            >
+                <DialogTitle id="logout-dialog-title">
+                    Confirmation de déconnexion
+                </DialogTitle>
+                <DialogContent>
+                    Êtes-vous sûr de vouloir vous déconnecter ?
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleLogoutCancel} variant="outlined" color="primary">
+                        Annuler
+                    </Button>
+                    <Button onClick={handleLogoutConfirm} variant="contained" color="error" autoFocus>
+                        Déconnexion
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {selectedTab === 1 && <ProtectedRoute><StatsTotales /></ProtectedRoute>}
             {selectedTab === 2 && <ProtectedRoute><GrapheEmprunts /></ProtectedRoute>}
