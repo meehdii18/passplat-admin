@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
     Box,
     Button,
@@ -6,44 +7,78 @@ import {
     TextField,
     Typography,
     Paper,
+    Alert,
 } from '@mui/material';
 import axios from "axios";
+import { useNavigate } from 'react-router-dom';
+import { authService } from '../../services/auth.service';
 
 const Connexion: React.FC = () => {
+    const navigate = useNavigate();
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        console.log('Email:', email, 'Password:', password);
-
-        axios.post('http://localhost:8080/account/loginAdmin', { email, password })
-            .then(response => {
-                if (response.status === 200) {
-                    console.log('Connexion réussie');
+        setError('');
+        
+        try {
+            const response = await authService.login(email, password);
+            
+            if (response && response.role === 2) {
+                const token = btoa(JSON.stringify({
+                    id: response.id,
+                    prenom: response.prenom,
+                    nom: response.nom,
+                    username: response.username,
+                    role: response.role
+                }));
+                
+                login(token);
+                navigate('/');
+            } else {
+                setError('Accès non autorisé');
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 404) {
+                    setError('Identifiants incorrects');
                 } else {
-                    console.log('Échec de la connexion');
+                    setError('Erreur interne, veuillez réessayer plus tard');
                 }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-            });
+            }
+        }
     };
 
     return (
         <Container component="main" maxWidth="xs">
-            <Box
-                sx={{
-                    marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
+            <Box sx={{ textAlign: 'center' }}>
+                <img 
+                    src="/public/logo-passplat.png" 
+                    alt="Logo Passplat" 
+                    style={{ width: '200px', height: 'auto' }}
+                />
+            </Box>
+            <Box sx={{
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+            }}>
                 <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-                    <Typography component="h1" variant="h5" align="center">
+                    <Typography component="h1" variant="h3" align="center">
                         Connexion
                     </Typography>
+                    <Typography component="h1" variant="subtitle1" align="center">
+                        Panneau administrateur Passplat
+                    </Typography>
+                    {error && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
                     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                         <TextField
                             margin="normal"
