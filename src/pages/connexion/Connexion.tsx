@@ -15,7 +15,6 @@ const Connexion: React.FC = () => {
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        // TODO : Ajouter la logique ici
         console.log('Email:', email, 'Password:', password);
 
         axios.post('http://localhost:8080/account/loginAdmin', { email, password })

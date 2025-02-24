@@ -18,19 +18,18 @@ function App() {
         <>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: 2 }}>
                 <Tabs value={selectedTab} onChange={handleTabChange} aria-label="basic tabs example">
-                    <Tab label="Stats totales" value={1}/>
-                    <Tab label="Graphe emprunts" value={2}/>
-                    <Tab label="Stats diffuseur" value={3}/>
-                    <Tab label="Stats emprunts période" value={4}/>
-                    <Tab label="Connexion" value={5}/>
+                    <Tab label="Connexion" value={1}/>
+                    <Tab label="Stats totales" value={2}/>
+                    <Tab label="Graphe emprunts" value={4}/>
+                    <Tab label="Stats emprunts période" value={5}/>
                 </Tabs>
             </Box>
 
-            {selectedTab == 1 && <StatsTotales></StatsTotales>}
-            {selectedTab == 2 && <GrapheEmprunts></GrapheEmprunts>}
-            {selectedTab == 3 && <StatsDiffuseur></StatsDiffuseur>}
-            {selectedTab == 4 && <StatsEmpruntsPeriode></StatsEmpruntsPeriode>}
-            {selectedTab == 5 && <Connexion></Connexion>}
+            {selectedTab == 2 && <StatsTotales></StatsTotales>}
+            {selectedTab == 3 && <GrapheEmprunts></GrapheEmprunts>}
+            {selectedTab == 4 && <StatsDiffuseur></StatsDiffuseur>}
+            {selectedTab == 5 && <StatsEmpruntsPeriode></StatsEmpruntsPeriode>}
+            {selectedTab == 1 && <Connexion></Connexion>}
         </>
     )
 }
