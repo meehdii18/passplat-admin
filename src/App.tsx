@@ -1,37 +1,43 @@
-import './App.css'
-import {Box, Tab, Tabs} from "@mui/material";
+import './App.css';
+import { Box, Tab, Tabs } from "@mui/material";
 import React from "react";
-import StatsTotales from "./pages/stats-totales/StatsTotales.tsx";
-import GrapheEmprunts from "./pages/graphe-emprunts/GrapheEmprunts.tsx";
-import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur.tsx";
-import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode.tsx";
-import Connexion from './pages/connexion/Connexion.tsx';
+import { useAuth } from './contexts/AuthContext';
+import StatsTotales from "./pages/stats-totales/StatsTotales";
+import GrapheEmprunts from "./pages/graphe-emprunts/GrapheEmprunts";
+import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur";
+import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode";
+import Connexion from './pages/connexion/Connexion';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
 
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);
+    const { isAuthenticated } = useAuth();
 
     function handleTabChange(_event: React.SyntheticEvent, newTabValue: number) {
         setSelectedTab(newTabValue);
     }
 
+    if (!isAuthenticated) {
+        return <Connexion />;
+    }
+
     return (
         <>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: 2 }}>
-                <Tabs value={selectedTab} onChange={handleTabChange} aria-label="basic tabs example">
-                    <Tab label="Connexion" value={1}/>
-                    <Tab label="Stats totales" value={2}/>
-                    <Tab label="Graphe emprunts" value={4}/>
-                    <Tab label="Stats emprunts période" value={5}/>
+                <Tabs value={selectedTab} onChange={handleTabChange}>
+                    <Tab label="Stats totales" value={1}/>
+                    <Tab label="Graphe des emprunts" value={2}/>
+                    <Tab label="Stats diffuseurs" value={3}/>
+                    <Tab label="Stats emprunts par période" value={4}/>
                 </Tabs>
             </Box>
 
-            {selectedTab == 2 && <StatsTotales></StatsTotales>}
-            {selectedTab == 3 && <GrapheEmprunts></GrapheEmprunts>}
-            {selectedTab == 4 && <StatsDiffuseur></StatsDiffuseur>}
-            {selectedTab == 5 && <StatsEmpruntsPeriode></StatsEmpruntsPeriode>}
-            {selectedTab == 1 && <Connexion></Connexion>}
+            {selectedTab === 1 && <ProtectedRoute><StatsTotales /></ProtectedRoute>}
+            {selectedTab === 2 && <ProtectedRoute><GrapheEmprunts /></ProtectedRoute>}
+            {selectedTab === 3 && <ProtectedRoute><StatsDiffuseur /></ProtectedRoute>}
+            {selectedTab === 4 && <ProtectedRoute><StatsEmpruntsPeriode /></ProtectedRoute>}
         </>
-    )
+    );
 }
 
-export default App
+export default App;
