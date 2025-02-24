@@ -56,7 +56,7 @@ const Connexion: React.FC = () => {
         <Container component="main" maxWidth="xs">
             <Box sx={{ textAlign: 'center' }}>
                 <img 
-                    src="/public/logo-passplat.png" 
+                    src="/logo-passplat.png" 
                     alt="Logo Passplat" 
                     style={{ width: '200px', height: 'auto' }}
                 />
