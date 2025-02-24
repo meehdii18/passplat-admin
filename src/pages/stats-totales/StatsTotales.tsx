@@ -111,7 +111,7 @@ const StatsTotales: React.FC = () => {
             </Typography>
             <Grid container spacing={3}>
                 {statsData.map((stat, index) => (
-                    <Grid key={index} xs={12} sm={6} md={4}>
+                    <Grid key={index} item xs={12} sm={6} md={4}>
                         <Card sx={cardStyle}>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>{stat.label}</Typography>

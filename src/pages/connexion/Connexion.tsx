@@ -11,12 +11,7 @@ import {
 } from '@mui/material';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-interface LoginResponse {
-    id: number;
-    mail: string;
-    username: string;
-    role: number;
-}
+import { authService } from '../../services/auth.service';
 
 const Connexion: React.FC = () => {
     const navigate = useNavigate();
@@ -30,17 +25,15 @@ const Connexion: React.FC = () => {
         setError('');
         
         try {
-            const response = await axios.post<LoginResponse>('http://localhost:8080/account/loginAdmin', { 
-                email, 
-                password 
-            });
+            const response = await authService.login(email, password);
             
-            if (response.data && response.data.role === 2) {
+            if (response && response.role === 2) {
                 const token = btoa(JSON.stringify({
-                    id: response.data.id,
-                    mail: response.data.mail,
-                    username: response.data.username,
-                    role: response.data.role
+                    id: response.id,
+                    prenom: response.prenom,
+                    nom: response.nom,
+                    username: response.username,
+                    role: response.role
                 }));
                 
                 login(token);
@@ -61,6 +54,13 @@ const Connexion: React.FC = () => {
 
     return (
         <Container component="main" maxWidth="xs">
+            <Box sx={{ textAlign: 'center' }}>
+                <img 
+                    src="/public/logo-passplat.png" 
+                    alt="Logo Passplat" 
+                    style={{ width: '200px', height: 'auto' }}
+                />
+            </Box>
             <Box sx={{
                 marginTop: 8,
                 display: 'flex',
@@ -68,8 +68,11 @@ const Connexion: React.FC = () => {
                 alignItems: 'center',
             }}>
                 <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-                    <Typography component="h1" variant="h5" align="center">
+                    <Typography component="h1" variant="h3" align="center">
                         Connexion
+                    </Typography>
+                    <Typography component="h1" variant="subtitle1" align="center">
+                        Panneau administrateur Passplat
                     </Typography>
                     {error && (
                         <Alert severity="error" sx={{ mt: 2 }}>
