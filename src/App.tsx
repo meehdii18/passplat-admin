@@ -8,7 +8,6 @@ import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur";
 import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode";
 import Connexion from './pages/connexion/Connexion';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
-import { authService } from './services/auth.service.ts';
 
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);

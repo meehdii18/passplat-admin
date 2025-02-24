@@ -4,6 +4,8 @@ import { User } from '../types/auth.types';
 interface LoginResponse {
     id: number;
     mail: string;
+    nom: string;
+    prenom: string;
     username: string;
     role: number;
 }
