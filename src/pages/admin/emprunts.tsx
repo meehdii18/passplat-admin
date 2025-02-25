@@ -30,6 +30,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
+import DoneIcon from '@mui/icons-material/Done';
 import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -104,7 +105,9 @@ const AdminEmpruntPage: React.FC = () => {
     const [diffuseurs, setDiffuseurs] = useState<Map<number, DiffuseurCollecteur>>(new Map());
     const [prolongDialogOpen, setProlongDialogOpen] = useState(false);
     const [empruntToProlong, setEmpruntToProlong] = useState<number | null>(null);
-
+    const [terminateDialogOpen, setTerminateDialogOpen] = useState(false);
+    const [empruntToTerminate, setEmpruntToTerminate] = useState<Emprunt | null>(null);
+    const [collecteurs, setCollecteurs] = useState<Map<number, DiffuseurCollecteur>>(new Map());
 
     useEffect(() => {
         Promise.all([fetchEmprunts(), fetchData()]);
@@ -121,19 +124,35 @@ const AdminEmpruntPage: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const [usersRes, diffuseursRes] = await Promise.all([
+            const [usersRes, diffuseursRes, collecteursRes] = await Promise.all([
                 axios.get('http://localhost:8080/account/getAll'),
-                axios.get('http://localhost:8080/diffuseur/getAll')
+                axios.get('http://localhost:8080/diffuseur/getAll'),
+                axios.get('http://localhost:8080/collecteur/getAll') // Add this new endpoint
             ]);
             
             const usersMap = new Map(usersRes.data.map((user: User) => [user.id, user]));
             const diffuseursMap = new Map(diffuseursRes.data.map((diff: DiffuseurCollecteur) => [diff.id, diff]));
+            const collecteursMap = new Map(collecteursRes.data.map((coll: DiffuseurCollecteur) => [coll.id, coll]));
             
             setUsers(usersMap);
             setDiffuseurs(diffuseursMap);
+            setCollecteurs(collecteursMap);
         } catch (error) {
             showSnackbar('Erreur lors de la récupération des données', 'error');
         }
+    };
+    const getCollecteurs = () => {
+        const collecteursArray = Array.from(collecteurs.values());
+        
+        collecteursArray.sort((a, b) => a.nom.localeCompare(b.nom));
+        
+        console.log("All collecteurs:", collecteursArray.map(c => ({
+            id: c.id,
+            nom: c.nom,
+            role: c.account.role
+        })));
+        
+        return collecteursArray;
     };
 
     const handleEdit = (emprunt: Emprunt) => {
@@ -207,32 +226,21 @@ const AdminEmpruntPage: React.FC = () => {
         e.preventDefault();
         try {
             if (selectedEmprunt) {
-                if (formData.dateRenduReel) {
-                    const empruntData = {
-                        idUser: formData.IdUser,
-                        ListeRendu: {
-                            [formData.IdContenant]: formData.quantite
-                        },
-                        idCollecteur: formData.IdCollecteur
-                    };
-                    await axios.post('http://localhost:8080/emprunt/finishEmprunt', empruntData);
-                    showSnackbar('Emprunt terminé avec succès', 'success');
-                } else {
-                    const updatedEmprunt = {
-                        id: selectedEmprunt.id,
-                        user: { id: formData.IdUser },
-                        contenant: { id: formData.IdContenant },
-                        diffuseur: { id: formData.IdDiffuseur },
-                        dateEmprunt: formData.dateEmprunt,
-                        quantite: formData.quantite,
-                        dateRenduPrevu: formData.dateRenduPrevu,
-                        dateRenduReel: formData.dateRenduReel,
-                        collecteur: formData.IdCollecteur ? { id: formData.IdCollecteur } : null
-                    };
-                    await axios.post('http://localhost:8080/emprunt/add', updatedEmprunt);
-                    showSnackbar('Emprunt modifié avec succès', 'success');
-                }
+                const updatedEmprunt = {
+                    id: selectedEmprunt.id,
+                    user: { id: formData.IdUser },
+                    contenant: { id: formData.IdContenant },
+                    diffuseur: { id: formData.IdDiffuseur },
+                    dateEmprunt: formData.dateEmprunt,
+                    quantite: formData.quantite,
+                    dateRenduPrevu: formData.dateRenduPrevu,
+                    dateRenduReel: formData.dateRenduReel,
+                    collecteur: formData.IdCollecteur ? { id: formData.IdCollecteur } : null
+                };
+                await axios.post('http://localhost:8080/emprunt/add', updatedEmprunt);
+                showSnackbar('Emprunt modifié avec succès', 'success');
             } else {
+                // Creating a new emprunt
                 await axios.post(
                     'http://localhost:8080/emprunt/addEmprunt', 
                     null, 
@@ -266,10 +274,39 @@ const AdminEmpruntPage: React.FC = () => {
         }
     };
 
-    const isDateOverdue = (dateRendu: string, datePrevu: string) => {
-        const rendu = new Date(dateRendu);
-        const prevu = new Date(datePrevu);
-        return rendu > prevu;
+    const handleTerminate = (emprunt: Emprunt) => {
+        setEmpruntToTerminate(emprunt);
+        setTerminateDialogOpen(true); 
+        setFormData({
+            ...formData,
+            IdUser: emprunt.user.id,
+            IdContenant: emprunt.contenant.id,
+            IdDiffuseur: emprunt.diffuseur.id,
+            quantite: emprunt.quantite,
+            IdCollecteur: 0
+        });
+    };
+
+    const handleTerminateConfirm = async () => {
+        if (empruntToTerminate) {
+            try {
+                const empruntData = {
+                    idUser: formData.IdUser,
+                    ListeRendu: {
+                        [formData.IdContenant]: formData.quantite
+                    },
+                    idCollecteur: formData.IdCollecteur
+                };
+                await axios.post('http://localhost:8080/emprunt/finishEmprunt', empruntData);
+                showSnackbar('Emprunt terminé avec succès', 'success');
+                fetchEmprunts();
+            } catch (error) {
+                console.error('Error:', error);
+                showSnackbar('Erreur lors de la terminaison', 'error');
+            }
+            setTerminateDialogOpen(false);
+            setEmpruntToTerminate(null);
+        }
     };
 
     return (
@@ -381,26 +418,38 @@ const AdminEmpruntPage: React.FC = () => {
                                         '-'}
                                 </TableCell>
                                 <TableCell>
-                                    {emprunt?.collecteur?.nom || '-'}
+                                    {emprunt?.collecteur && 
+                                    (emprunt.collecteur.account.role === 4 || emprunt.collecteur.account.role === 5) 
+                                        ? emprunt.collecteur.nom 
+                                        : '-'}
                                 </TableCell>
                                 <TableCell>
-                                    <IconButton 
-                                        color="primary" 
-                                        onClick={() => emprunt && handleEdit(emprunt)}
-                                        disabled={!emprunt}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                    {emprunt && !emprunt.dateRenduReel && (
-                                    <IconButton
-                                        color="secondary"
-                                        onClick={() => handleProlongClick(emprunt.id)}
-                                        title="Prolonger l'emprunt"
-                                    >
-                                        <HistoryIcon />
-                                    </IconButton>
-                                    )}
-                                </TableCell>
+                                <IconButton 
+                                    color="primary" 
+                                    onClick={() => emprunt && handleEdit(emprunt)}
+                                    disabled={!emprunt}
+                                >
+                                    <EditIcon />
+                                </IconButton>
+                                {emprunt && !emprunt.dateRenduReel && (
+                                    <>
+                                        <IconButton
+                                            color="secondary"
+                                            onClick={() => handleProlongClick(emprunt.id)}
+                                            title="Prolonger l'emprunt"
+                                        >
+                                            <HistoryIcon />
+                                        </IconButton>
+                                        <IconButton
+                                            color="success"
+                                            onClick={() => handleTerminate(emprunt)}
+                                            title="Terminer l'emprunt"
+                                        >
+                                            <DoneIcon />
+                                        </IconButton>
+                                    </>
+                                )}
+                            </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -507,20 +556,20 @@ const AdminEmpruntPage: React.FC = () => {
                                     }}
                                 />
 
-                                <FormControl fullWidth margin="normal">
-                                    <InputLabel>Collecteur</InputLabel>
-                                    <Select
-                                        value={formData.IdCollecteur}
-                                        onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
-                                    >
-                                        <MenuItem value={0}>-</MenuItem>
-                                        {Array.from(diffuseurs.values()).map((diffuseur) => (
-                                            <MenuItem key={diffuseur.id} value={diffuseur.id}>
-                                                {diffuseur.nom}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel>Collecteur</InputLabel>
+                            <Select
+                                value={formData.IdCollecteur}
+                                onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
+                            >
+                                <MenuItem value={0}>-</MenuItem>
+                                {getCollecteurs().map((collecteur) => (
+                                    <MenuItem key={collecteur.id} value={collecteur.id}>
+                                        {collecteur.nom}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                             </>
                         )}
                     </DialogContent>
@@ -545,6 +594,53 @@ const AdminEmpruntPage: React.FC = () => {
                     <Button onClick={() => setProlongDialogOpen(false)}>Annuler</Button>
                     <Button onClick={handleProlongConfirm} variant="contained" color="primary">
                         Confirmer
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={terminateDialogOpen}
+                onClose={() => setTerminateDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Terminer l'emprunt</DialogTitle>
+                <DialogContent>
+                    <Typography gutterBottom>
+                        Voulez-vous terminer cet emprunt ?
+                    </Typography>
+                    {empruntToTerminate && (
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Utilisateur: {empruntToTerminate.user.prenom} {empruntToTerminate.user.nom}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Contenant: {empruntToTerminate.contenant.nom}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Quantité: {empruntToTerminate.quantite}
+                            </Typography>
+                        </Box>
+                    )}
+                <FormControl fullWidth margin="normal">
+                    <InputLabel>Collecteur</InputLabel>
+                    <Select
+                        value={formData.IdCollecteur}
+                        onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
+                    >
+                        <MenuItem value={0}>-</MenuItem>
+                        {getCollecteurs().map((collecteur) => (
+                            <MenuItem key={collecteur.id} value={collecteur.id}>
+                                {collecteur.nom}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setTerminateDialogOpen(false)}>Annuler</Button>
+                    <Button onClick={handleTerminateConfirm} variant="contained" color="success">
+                        Terminer l'emprunt
                     </Button>
                 </DialogActions>
             </Dialog>
