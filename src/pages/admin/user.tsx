@@ -80,7 +80,7 @@ const getRoleName = (role: number): string => {
     }
 };
 
-const AdminPage: React.FC = () => {
+const AdminUserPage: React.FC = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState<User[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
@@ -456,4 +456,4 @@ const AdminPage: React.FC = () => {
     );
 };
 
-export default AdminPage;
+export default AdminUserPage;
