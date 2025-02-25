@@ -1,5 +1,6 @@
 import './App.css';
-import { Box, Button, Tab, Tabs, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Box, Button, Tab, Tabs, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import React from "react";
 import { useAuth } from './contexts/AuthContext';
 import StatsTotales from "./pages/stats-totales/StatsTotales";
@@ -8,9 +9,11 @@ import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur";
 import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode";
 import Connexion from './pages/connexion/Connexion';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
+import { useNavigate } from 'react-router-dom';
 
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);
+    const navigate = useNavigate()
     const { isAuthenticated, logout, user } = useAuth();
     const [openLogoutDialog, setOpenLogoutDialog] = React.useState(false);
 
@@ -36,6 +39,10 @@ function App() {
         return <Connexion />;
     }
 
+    const handleAdminClick = () => {
+        navigate("/admin/user");
+    }
+
     return (
         <>
             <Box sx={{ 
@@ -52,11 +59,14 @@ function App() {
                     <Tab label="Stats diffuseurs" value={3}/>
                     <Tab label="Stats emprunts par période" value={4}/>
                 </Tabs>
-                <Typography variant="subtitle1">
-                        {user?.prenom && user?.nom 
-                            ? `Bonjour ${user.prenom} ${user.nom}`
-                            : 'Bonjour'}
-                    </Typography>
+                <IconButton
+                    aria-label="admin"
+                    onClick={handleAdminClick}
+                    color="primary"
+                    sx={{ ml: 5 }}
+                >
+                    <AdminPanelSettingsIcon />
+                </IconButton>
                 <Button 
                     onClick={handleLogoutClick}
                     variant="outlined"

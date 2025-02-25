@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ThemeProvider, CssBaseline, GlobalStyles } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import App from './App';
+import AppRoutes from './routes';
 import theme from './theme';
 
 createRoot(document.getElementById('root')!).render(
@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
                     <GlobalStyles styles={{ body: { backgroundColor: theme.palette.background.default } }} />
-                    <App />
+                    <AppRoutes /> 
                 </ThemeProvider>
             </AuthProvider>
         </BrowserRouter>
