@@ -28,6 +28,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SearchIcon from '@mui/icons-material/Search';
+import InputAdornment from '@mui/material/InputAdornment';
 import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -99,6 +101,7 @@ const AdminPage: React.FC = () => {
     const theme = useTheme();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -196,6 +199,16 @@ const AdminPage: React.FC = () => {
         });
     };
 
+    const filteredUsers = users.filter((user) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+            user.nom.toLowerCase().includes(searchLower) ||
+            user.prenom.toLowerCase().includes(searchLower) ||
+            user.username.toLowerCase().includes(searchLower) ||
+            user.mail.toLowerCase().includes(searchLower)
+        );
+    });
+
     return (
         <Container>
         <Box sx={{ 
@@ -219,6 +232,27 @@ const AdminPage: React.FC = () => {
             
 
             
+        <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3 
+        }}>
+            <TextField
+                size="small"
+                variant="outlined"
+                placeholder="Rechercher un utilisateur..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{ width: '300px' }}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <SearchIcon />
+                        </InputAdornment>
+                    ),
+                }}
+            />
             <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -242,6 +276,8 @@ const AdminPage: React.FC = () => {
             >
                 Ajouter un utilisateur
             </Button>
+        </Box>
+        
 
             <TableContainer component={Paper}>
                 <Table>
@@ -257,7 +293,7 @@ const AdminPage: React.FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell>{user.nom}</TableCell>
                                 <TableCell>{user.prenom}</TableCell>
