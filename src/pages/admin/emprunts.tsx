@@ -73,6 +73,7 @@ interface Emprunt {
 }
 
 interface EmpruntFormData {
+    id?: number;
     IdUser: number;
     IdContenant: number;
     IdDiffuseur: number;
@@ -118,6 +119,7 @@ const AdminEmpruntPage: React.FC = () => {
             const response = await axios.get('http://localhost:8080/emprunt/getAll');
             setEmprunts(response.data);
         } catch (error) {
+            console.error('Error fetching emprunts:', error);
             showSnackbar('Erreur lors de la récupération des emprunts', 'error');
         }
     };
@@ -127,17 +129,18 @@ const AdminEmpruntPage: React.FC = () => {
             const [usersRes, diffuseursRes, collecteursRes] = await Promise.all([
                 axios.get('http://localhost:8080/account/getAll'),
                 axios.get('http://localhost:8080/diffuseur/getAll'),
-                axios.get('http://localhost:8080/collecteur/getAll') // Add this new endpoint
+                axios.get('http://localhost:8080/collecteur/getAll')
             ]);
             
-            const usersMap = new Map(usersRes.data.map((user: User) => [user.id, user]));
-            const diffuseursMap = new Map(diffuseursRes.data.map((diff: DiffuseurCollecteur) => [diff.id, diff]));
-            const collecteursMap = new Map(collecteursRes.data.map((coll: DiffuseurCollecteur) => [coll.id, coll]));
+            const usersMap: Map<number, User> = new Map(usersRes.data.map((user: User): [number, User] => [user.id, user]));
+            const diffuseursMap: Map<number, DiffuseurCollecteur> = new Map(diffuseursRes.data.map((diff: DiffuseurCollecteur): [number, DiffuseurCollecteur] => [diff.id, diff]));
+            const collecteursMap: Map<number,DiffuseurCollecteur>  = new Map(collecteursRes.data.map((coll: DiffuseurCollecteur) => [coll.id, coll]));
             
             setUsers(usersMap);
             setDiffuseurs(diffuseursMap);
             setCollecteurs(collecteursMap);
         } catch (error) {
+            console.error('Error fetching users:', error);
             showSnackbar('Erreur lors de la récupération des données', 'error');
         }
     };
@@ -145,12 +148,6 @@ const AdminEmpruntPage: React.FC = () => {
         const collecteursArray = Array.from(collecteurs.values());
         
         collecteursArray.sort((a, b) => a.nom.localeCompare(b.nom));
-        
-        console.log("All collecteurs:", collecteursArray.map(c => ({
-            id: c.id,
-            nom: c.nom,
-            role: c.account.role
-        })));
         
         return collecteursArray;
     };
@@ -240,7 +237,6 @@ const AdminEmpruntPage: React.FC = () => {
                 await axios.post('http://localhost:8080/emprunt/add', updatedEmprunt);
                 showSnackbar('Emprunt modifié avec succès', 'success');
             } else {
-                // Creating a new emprunt
                 await axios.post(
                     'http://localhost:8080/emprunt/addEmprunt', 
                     null, 
@@ -260,17 +256,6 @@ const AdminEmpruntPage: React.FC = () => {
         } catch (error) {
             console.error('Error:', error);
             showSnackbar('Erreur lors de la sauvegarde', 'error');
-        }
-    };
-
-    const handleProlong = async (empruntId: number) => {
-        try {
-            await axios.post(`http://localhost:8080/emprunt/prolong/${empruntId}`);
-            showSnackbar('Emprunt prolongé avec succès', 'success');
-            fetchEmprunts();
-        } catch (error) {
-            console.error('Error:', error);
-            showSnackbar('Erreur lors de la prolongation', 'error');
         }
     };
 

@@ -112,6 +112,7 @@ const AdminUserPage: React.FC = () => {
             const response = await axios.get('http://localhost:8080/account/getAll');
             setUsers(response.data);
         } catch (error) {
+            console.error('Error fetching emprunts:', error);
             showSnackbar('Erreur lors de la récupération des utilisateurs', 'error');
         }
     };
@@ -145,6 +146,7 @@ const AdminUserPage: React.FC = () => {
                 fetchUsers();
                 showSnackbar('Utilisateur supprimé avec succès', 'success');
             } catch (error) {
+                console.error('Error fetching emprunts:', error);
                 showSnackbar('Erreur lors de la suppression', 'error');
             }
         }
@@ -174,6 +176,7 @@ const AdminUserPage: React.FC = () => {
             setOpenDialog(false);
             fetchUsers();
         } catch (error) {
+            console.error('Error fetching emprunts:', error);
             showSnackbar('Erreur lors de la sauvegarde', 'error');
         }
     };
