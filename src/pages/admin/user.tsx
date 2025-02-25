@@ -279,7 +279,27 @@ const AdminPage: React.FC = () => {
         </Box>
         
 
-            <TableContainer component={Paper}>
+            <TableContainer 
+            component={Paper}
+            sx={{ 
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 5,
+                '& .MuiTableCell-root': {
+                    borderRight: 1,
+                    borderColor: 'divider',
+                    '&:last-child': {
+                        borderRight: 0
+                    }
+                },
+                '& .MuiTableHead-root': {
+                    '& .MuiTableCell-root': {
+                        backgroundColor: theme.palette.primary.main,
+                        fontWeight: 'bold'
+                    }
+                }
+            }}
+            >
                 <Table>
                     <TableHead>
                         <TableRow>
