@@ -259,6 +259,13 @@ const AdminEmpruntPage: React.FC = () => {
         }
     };
 
+    const filteredEmprunts = emprunts.filter((emprunt) => {
+        const searchLower = searchQuery.toLowerCase();
+        const fullName = `${emprunt?.user?.prenom} ${emprunt?.user?.nom}`.toLowerCase();
+        
+        return fullName.includes(searchLower);
+    });
+
     const handleTerminate = (emprunt: Emprunt) => {
         setEmpruntToTerminate(emprunt);
         setTerminateDialogOpen(true); 
@@ -378,7 +385,7 @@ const AdminEmpruntPage: React.FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {emprunts.map((emprunt) => (
+                        {filteredEmprunts.map((emprunt) => (
                             <TableRow key={emprunt?.id || 'undefined'}>
                                 <TableCell>{emprunt?.id || '-'}</TableCell>
                                 <TableCell>
