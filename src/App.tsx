@@ -1,5 +1,5 @@
 import './App.css';
-import { Box, Button, Tab, Tabs, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { Box, Button, Tab, Tabs, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Menu, MenuItem } from "@mui/material";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import React from "react";
 import { useAuth } from './contexts/AuthContext';
@@ -14,8 +14,10 @@ import { useNavigate } from 'react-router-dom';
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);
     const navigate = useNavigate()
-    const { isAuthenticated, logout, user } = useAuth();
+    const { isAuthenticated, logout } = useAuth();
     const [openLogoutDialog, setOpenLogoutDialog] = React.useState(false);
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
     function handleTabChange(_event: React.SyntheticEvent, newTabValue: number) {
         setSelectedTab(newTabValue);
@@ -39,9 +41,23 @@ function App() {
         return <Connexion />;
     }
 
-    const handleAdminClick = () => {
+    const handleAdminMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleAdminMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleUserManagement = () => {
         navigate("/admin/user");
-    }
+        handleAdminMenuClose();
+    };
+
+    const handleEmprunt = () => {
+        navigate("/admin/emprunt");
+        handleAdminMenuClose();
+    };
 
     return (
         <>
@@ -61,12 +77,27 @@ function App() {
                 </Tabs>
                 <IconButton
                     aria-label="admin"
-                    onClick={handleAdminClick}
+                    onClick={handleAdminMenuOpen}
                     color="primary"
                     sx={{ ml: 5 }}
+                    aria-controls={open ? 'admin-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? 'true' : undefined}
                 >
                     <AdminPanelSettingsIcon />
                 </IconButton>
+                <Menu
+                    id="admin-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleAdminMenuClose}
+                    MenuListProps={{
+                        'aria-labelledby': 'admin-button',
+                    }}
+                >
+                    <MenuItem onClick={handleUserManagement}>Gestion des utilisateurs</MenuItem>
+                    <MenuItem onClick={handleEmprunt}>Gestion des emprunts</MenuItem>
+                </Menu>
                 <Button 
                     onClick={handleLogoutClick}
                     variant="outlined"

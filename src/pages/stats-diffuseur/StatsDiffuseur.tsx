@@ -77,7 +77,7 @@ const StatsDiffuseur: React.FC = () => {
                     margin="normal"
                 />
                 <Button type="submit" variant="contained" disabled={loading}>
-                    {loading ? 'Loading...' : 'Fetch Stats'}
+                    {loading ? 'Loading...' : 'Afficher'}
                 </Button>
             </form>
 
