@@ -102,6 +102,7 @@ const AdminUserPage: React.FC = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -407,17 +408,34 @@ const AdminUserPage: React.FC = () => {
                                 <MenuItem value={ROLES.BOTH}>Diffuseur/Collecteur</MenuItem>
                             </Select>
                         </FormControl>
-                        {!selectedUser && (
-                            <TextField
-                                fullWidth
-                                label="Mot de passe"
-                                type="password"
-                                value={formData.mdp}
-                                onChange={(e) => setFormData({...formData, mdp: e.target.value})}
-                                margin="normal"
-                                required
-                            />
-                        )}
+                        {selectedUser ? (
+    <FormControl fullWidth margin="normal">
+        <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+                setFormData({
+                    ...formData,
+                    mdp: '' // Réinitialiser le mot de passe
+                });
+                // Ouvrir un nouveau Dialog pour le changement de mot de passe
+                setPasswordDialogOpen(true);
+            }}
+        >
+            Changer le mot de passe
+        </Button>
+    </FormControl>
+) : (
+    <TextField
+        fullWidth
+        label="Mot de passe"
+        type="password"
+        value={formData.mdp}
+        onChange={(e) => setFormData({...formData, mdp: e.target.value})}
+        margin="normal"
+        required
+    />
+)}
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleCloseDialog}>Annuler</Button>
@@ -445,6 +463,48 @@ const AdminUserPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <Dialog
+                open={passwordDialogOpen}
+                onClose={() => setPasswordDialogOpen(false)}
+            >
+            <DialogTitle>
+                Changer le mot de passe
+            </DialogTitle>
+            <DialogContent>
+                <TextField
+                    fullWidth
+                    label="Nouveau mot de passe"
+                    type="password"
+                    value={formData.mdp}
+                    onChange={(e) => setFormData({...formData, mdp: e.target.value})}
+                    margin="normal"
+                    required
+                />
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setPasswordDialogOpen(false)}>
+                    Annuler
+                </Button>
+                <Button 
+                    onClick={async () => {
+                        try {
+                            await axios.patch(
+                                `http://localhost:8080/account/updateMdp/${selectedUser?.id}/${formData.mdp}`
+                            );
+                            showSnackbar('Mot de passe modifié avec succès', 'success');
+                            setPasswordDialogOpen(false);
+                        } catch (error) {
+                            showSnackbar('Erreur lors de la modification du mot de passe', 'error');
+                        }
+                    }} 
+                    color="primary" 
+                    variant="contained"
+                >
+                    Sauvegarder
+                </Button>
+            </DialogActions>
+        </Dialog>
 
             <Snackbar
                 open={snackbar.open}
