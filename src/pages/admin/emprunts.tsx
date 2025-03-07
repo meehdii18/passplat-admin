@@ -263,7 +263,16 @@ const AdminEmpruntPage: React.FC = () => {
         const searchLower = searchQuery.toLowerCase();
         const fullName = `${emprunt?.user?.prenom} ${emprunt?.user?.nom}`.toLowerCase();
         
-        return fullName.includes(searchLower);
+        return (
+            fullName.includes(searchLower) ||
+            (emprunt.collecteur?.nom?.toLowerCase() || '').includes(searchLower) ||
+            (emprunt.diffuseur?.nom?.toLowerCase() || '').includes(searchLower) ||
+            (emprunt.contenant?.nom?.toLowerCase() || '').includes(searchLower) ||
+            (new Date(emprunt.dateEmprunt).toLocaleDateString('fr-FR')).toLowerCase().includes(searchLower) ||
+            (new Date(emprunt.dateRenduPrevu).toLocaleDateString('fr-FR')).toLowerCase().includes(searchLower) ||
+            (new Date(emprunt.dateRenduReel).toLocaleDateString('fr-FR')).toLowerCase().includes(searchLower) ||
+            (emprunt.quantite.toString()).includes(searchLower) 
+        );
     });
 
     const handleTerminate = (emprunt: Emprunt) => {
