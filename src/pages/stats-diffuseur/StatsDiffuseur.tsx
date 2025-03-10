@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {Container, TextField, Button, Typography, Card, CardContent, Paper} from '@mui/material';
+import {Container, TextField, Button, Typography, Card, CardContent, Paper, Autocomplete} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 
@@ -21,12 +21,23 @@ interface StatsDiffuseur {
     };
 }
 
+interface Diffuseur {
+    id: number;
+    nom: string;
+}
+
 const StatsDiffuseur: React.FC = () => {
     const [id, setId] = useState<string>('');
     const [stats, setStats] = useState<StatsDiffuseur | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const theme = useTheme();
+    const [diffuseurs, setDiffuseurs] = useState<Diffuseur[]>([]);
+    const [selectedDiffuseur, setSelectedDiffuseur] = useState<Diffuseur | null>(null);
+
+    useEffect(() => {
+        fetchDiffuseurs();
+    }, []);
 
     const fetchStats = async (id: string) => {
         setLoading(true);
@@ -51,10 +62,21 @@ const StatsDiffuseur: React.FC = () => {
             setLoading(false);
         }
     };
+    
+    const fetchDiffuseurs = async () => {
+        try {
+            const response = await axios.get<Diffuseur[]>('http://localhost:8080/diffuseur/getAll');
+            setDiffuseurs(response.data);
+        } catch (err) {
+            console.error('Erreur lors du chargement des diffuseurs:', err);
+        }
+    };
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        fetchStats(id);
+        if (selectedDiffuseur) {
+            fetchStats(selectedDiffuseur.id.toString());
+        }
     };
 
     return (
@@ -69,14 +91,28 @@ const StatsDiffuseur: React.FC = () => {
                 Veuillez entrer l'ID du diffuseur pour afficher ses statistiques
             </Typography>
             <form onSubmit={handleSubmit}>
-                <TextField
-                    label="ID Diffuseur"
-                    value={id}
-                    onChange={(e) => setId(e.target.value)}
-                    fullWidth
-                    margin="normal"
+                <Autocomplete
+                    value={selectedDiffuseur}
+                    onChange={(event: any, newValue: Diffuseur | null) => {
+                        setSelectedDiffuseur(newValue);
+                    }}
+                    options={diffuseurs}
+                    getOptionLabel={(option) => option.nom}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Nom du diffuseur"
+                            fullWidth
+                            margin="normal"
+                        />
+                    )}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
                 />
-                <Button type="submit" variant="contained" disabled={loading}>
+                <Button 
+                    type="submit" 
+                    variant="contained" 
+                    disabled={loading || !selectedDiffuseur}
+                >
                     {loading ? 'Loading...' : 'Afficher'}
                 </Button>
             </form>
