@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Container, Card, CardContent, Typography, CircularProgress } from '@mui/material';
+import { 
+    Container, 
+    Card, 
+    CardContent, 
+    Typography, 
+    CircularProgress,
+    Button,
+    Box,
+    Menu,
+    MenuItem
+} from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import DownloadIcon from '@mui/icons-material/Download';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { useTheme } from '@mui/material/styles';
 
 interface Stats {
@@ -29,7 +41,9 @@ const StatsTotales: React.FC = () => {
     const [stats, setStats] = useState<Stats | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const theme = useTheme();
+    const cardStyle = { backgroundColor: theme.palette.secondary.main };
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -98,17 +112,88 @@ const StatsTotales: React.FC = () => {
         { label: "Émission carbone évitée au total", value: "TBD" }
     ];
 
-    const cardStyle = { backgroundColor: theme.palette.secondary.main };
+    const handleExportClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const exportToCSV = () => {
+        const headers = ['Métrique', 'Valeur'];
+        const rows = statsData.map(stat => [stat.label, stat.value]);
+        
+        rows.push(['Nombre Emprunt Contenant S', stats.nombreEmpruntParContenant?.S || 0]);
+        rows.push(['Nombre Emprunt Contenant M', stats.nombreEmpruntParContenant?.M || 0]);
+        rows.push(['Nombre Emprunt Contenant XL', stats.nombreEmpruntParContenant?.XL || 0]);
+        rows.push(['Stock Contenant S', stats.stockContenantParType?.S || 0]);
+        rows.push(['Stock Contenant M', stats.stockContenantParType?.M || 0]);
+        rows.push(['Stock Contenant XL', stats.stockContenantParType?.XL || 0]);
+    
+        const csvContent = [headers, ...rows].map(row => row.join(';')).join('\n');
+        downloadFile(csvContent, 'statistiques.csv', 'text/csv');
+    };
+
+    const exportToXLS = () => {
+        const xlsContent = statsData.map(stat => `${stat.label}\t${stat.value}`).join('\n');
+        downloadFile(xlsContent, 'statistiques.xls', 'application/vnd.ms-excel');
+    };
+    
+    const exportToTXT = () => {
+        const txtContent = statsData.map(stat => `${stat.label}: ${stat.value}`).join('\n');
+        downloadFile(txtContent, 'statistiques.txt', 'text/plain');
+    };
+
+    const downloadFile = (content: string, fileName: string, mimeType: string) => {
+        const blob = new Blob([content], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        handleClose();
+    };
 
     return (
         <Container sx={{ py: 4 }}>
-            <Typography 
-                variant="h4" 
-                gutterBottom 
-                sx={{ color: theme.palette.primary.main, fontWeight: 'bold', mb: 4 }}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography 
+                    variant="h4" 
+                    gutterBottom 
+                    sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}
+                >
+                    Stats Totales
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<DownloadIcon />}
+                    onClick={handleExportClick}
+                >
+                    Exporter
+                </Button>
+            </Box>
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
             >
-                Stats Totales
-            </Typography>
+                <MenuItem onClick={exportToCSV}>
+                    <FileDownloadIcon sx={{ mr: 1 }} />
+                    Format CSV
+                </MenuItem>
+                <MenuItem onClick={exportToXLS}>
+                    <FileDownloadIcon sx={{ mr: 1 }} />
+                    Format XLS
+                </MenuItem>
+                <MenuItem onClick={exportToTXT}>
+                    <FileDownloadIcon sx={{ mr: 1 }} />
+                    Format TXT
+                </MenuItem>
+            </Menu>
             <Grid container spacing={3}>
                 {statsData.map((stat, index) => (
                     <Grid key={index} item xs={12} sm={6} md={4}>
