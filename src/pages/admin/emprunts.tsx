@@ -84,6 +84,11 @@ interface EmpruntFormData {
     IdCollecteur: number;
 }
 
+interface SortConfig {
+    key: string;
+    direction: 'asc' | 'desc';
+}
+
 const AdminEmpruntPage: React.FC = () => {
     const navigate = useNavigate();
     const [emprunts, setEmprunts] = useState<Emprunt[]>([]);
@@ -109,6 +114,7 @@ const AdminEmpruntPage: React.FC = () => {
     const [terminateDialogOpen, setTerminateDialogOpen] = useState(false);
     const [empruntToTerminate, setEmpruntToTerminate] = useState<Emprunt | null>(null);
     const [collecteurs, setCollecteurs] = useState<Map<number, DiffuseurCollecteur>>(new Map());
+    const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'asc' });
 
     useEffect(() => {
         Promise.all([fetchEmprunts(), fetchData()]);
@@ -309,6 +315,69 @@ const AdminEmpruntPage: React.FC = () => {
             setEmpruntToTerminate(null);
         }
     };
+    
+    const sortData = (data: Emprunt[]) => {
+        if (!sortConfig.key) return data;
+    
+        return [...data].sort((a, b) => {
+            let aValue: any;
+            let bValue: any;
+    
+            switch (sortConfig.key) {
+                case 'id':
+                    aValue = a.id;
+                    bValue = b.id;
+                    break;
+                case 'user':
+                    aValue = `${a.user?.prenom} ${a.user?.nom}`;
+                    bValue = `${b.user?.prenom} ${b.user?.nom}`;
+                    break;
+                case 'contenant':
+                    aValue = a.contenant?.nom;
+                    bValue = b.contenant?.nom;
+                    break;
+                case 'diffuseur':
+                    aValue = a.diffuseur?.nom;
+                    bValue = b.diffuseur?.nom;
+                    break;
+                    case 'dateEmprunt':
+                        aValue = new Date(a.dateEmprunt).getTime();
+                        bValue = new Date(b.dateEmprunt).getTime();
+                        break;
+                    case 'quantite':
+                        aValue = a.quantite;
+                        bValue = b.quantite;
+                        break;
+                    case 'dateRenduPrevu':
+                        aValue = new Date(a.dateRenduPrevu).getTime();
+                        bValue = new Date(b.dateRenduPrevu).getTime();
+                        break;
+                    case 'dateRenduReel':
+                        aValue = a.dateRenduReel ? new Date(a.dateRenduReel).getTime() : null;
+                        bValue = b.dateRenduReel ? new Date(b.dateRenduReel).getTime() : null;
+                        break;
+                    case 'collecteur':
+                        aValue = a.collecteur?.nom;
+                        bValue = b.collecteur?.nom;
+                        break;
+                    default:
+                        return 0;
+                }
+        
+                if (aValue === null) return 1;
+                if (bValue === null) return -1;
+                
+                const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                return sortConfig.direction === 'asc' ? comparison : -comparison;
+            });
+        };
+
+    const handleSort = (key: string) => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
 
     return (
         <Container>
@@ -379,22 +448,40 @@ const AdminEmpruntPage: React.FC = () => {
                 }
             }}>
                 <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Utilisateur</TableCell>
-                            <TableCell>Contenant</TableCell>
-                            <TableCell>Diffuseur</TableCell>
-                            <TableCell>Date d'emprunt</TableCell>
-                            <TableCell>Quantité</TableCell>
-                            <TableCell>Date prévue</TableCell>
-                            <TableCell>Date rendu</TableCell>
-                            <TableCell>Collecteur</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
+                <TableHead>
+                    <TableRow>
+                        <TableCell onClick={() => handleSort('id')} style={{ cursor: 'pointer' }}>
+                            ID {sortConfig.key === 'id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('user')} style={{ cursor: 'pointer' }}>
+                            Utilisateur {sortConfig.key === 'user' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('contenant')} style={{ cursor: 'pointer' }}>
+                            Contenant {sortConfig.key === 'contenant' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('diffuseur')} style={{ cursor: 'pointer' }}>
+                            Diffuseur {sortConfig.key === 'diffuseur' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('dateEmprunt')} style={{ cursor: 'pointer' }}>
+                            Date d'emprunt {sortConfig.key === 'dateEmprunt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('quantite')} style={{ cursor: 'pointer' }}>
+                            Quantité {sortConfig.key === 'quantite' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('dateRenduPrevu')} style={{ cursor: 'pointer' }}>
+                            Date prévue {sortConfig.key === 'dateRenduPrevu' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('dateRenduReel')} style={{ cursor: 'pointer' }}>
+                            Date rendu {sortConfig.key === 'dateRenduReel' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('collecteur')} style={{ cursor: 'pointer' }}>
+                            Collecteur {sortConfig.key === 'collecteur' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell>Actions</TableCell>
+                    </TableRow>
+                </TableHead>
                     <TableBody>
-                        {filteredEmprunts.map((emprunt) => (
+                        {sortData(filteredEmprunts).map((emprunt) => (
                             <TableRow key={emprunt?.id || 'undefined'}>
                                 <TableCell>{emprunt?.id || '-'}</TableCell>
                                 <TableCell>
