@@ -61,6 +61,11 @@ interface UserFormData {
     estSupprime: number;
 }
 
+interface SortConfig {
+    key: string;
+    direction: 'asc' | 'desc';
+}
+
 const ROLES = {
     USER: 1,
     ADMIN: 2,
@@ -103,6 +108,7 @@ const AdminUserPage: React.FC = () => {
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+    const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'asc' });
 
     useEffect(() => {
         fetchUsers();
@@ -215,6 +221,57 @@ const AdminUserPage: React.FC = () => {
         );
     });
 
+    const sortData = (data: User[]) => {
+        if (!sortConfig.key) return data;
+    
+        return [...data].sort((a, b) => {
+            let aValue: any;
+            let bValue: any;
+    
+            switch (sortConfig.key) {
+                case 'nom':
+                    aValue = a.nom;
+                    bValue = b.nom;
+                    break;
+                case 'prenom':
+                    aValue = a.prenom;
+                    bValue = b.prenom;
+                    break;
+                case 'username':
+                    aValue = a.username;
+                    bValue = b.username;
+                    break;
+                case 'mail':
+                    aValue = a.mail;
+                    bValue = b.mail;
+                    break;
+                case 'tel':
+                    aValue = a.tel;
+                    bValue = b.tel;
+                    break;
+                case 'role':
+                    aValue = getRoleName(a.role);
+                    bValue = getRoleName(b.role);
+                    break;
+                default:
+                    return 0;
+            }
+    
+            if (aValue === null) return 1;
+            if (bValue === null) return -1;
+            
+            const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    };
+
+    const handleSort = (key: string) => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+    
     return (
         <Container>
         <Box sx={{ 
@@ -307,19 +364,31 @@ const AdminUserPage: React.FC = () => {
             }}
             >
                 <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Nom</TableCell>
-                            <TableCell>Prénom</TableCell>
-                            <TableCell>Username</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Téléphone</TableCell>
-                            <TableCell>Rôle</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
+                <TableHead>
+                    <TableRow>
+                        <TableCell onClick={() => handleSort('nom')} style={{ cursor: 'pointer' }}>
+                            Nom {sortConfig.key === 'nom' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('prenom')} style={{ cursor: 'pointer' }}>
+                            Prénom {sortConfig.key === 'prenom' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('username')} style={{ cursor: 'pointer' }}>
+                            Username {sortConfig.key === 'username' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('mail')} style={{ cursor: 'pointer' }}>
+                            Email {sortConfig.key === 'mail' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('tel')} style={{ cursor: 'pointer' }}>
+                            Téléphone {sortConfig.key === 'tel' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell onClick={() => handleSort('role')} style={{ cursor: 'pointer' }}>
+                            Rôle {sortConfig.key === 'role' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        </TableCell>
+                        <TableCell>Actions</TableCell>
+                    </TableRow>
+                </TableHead>
                     <TableBody>
-                        {filteredUsers.map((user) => (
+                        {sortData(filteredUsers).map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell>{user.nom}</TableCell>
                                 <TableCell>{user.prenom}</TableCell>
