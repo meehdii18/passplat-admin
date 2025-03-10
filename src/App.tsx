@@ -9,6 +9,7 @@ import StatsDiffuseur from "./pages/stats-diffuseur/StatsDiffuseur";
 import StatsEmpruntsPeriode from "./pages/stats-emprunts-periode/StatsEmpruntsPeriode";
 import Connexion from './pages/connexion/Connexion';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
+import Populaire from './pages/populaire/Populaire.tsx';
 import { useNavigate } from 'react-router-dom';
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
                     <Tab label="Graphe des emprunts" value={2}/>
                     <Tab label="Stats diffuseurs" value={3}/>
                     <Tab label="Stats emprunts par période" value={4}/>
+                    <Tab label="Populaire" value={5}/>
                 </Tabs>
                 <IconButton
                     aria-label="admin"
@@ -133,6 +135,7 @@ function App() {
             {selectedTab === 2 && <ProtectedRoute><GrapheEmprunts /></ProtectedRoute>}
             {selectedTab === 3 && <ProtectedRoute><StatsDiffuseur /></ProtectedRoute>}
             {selectedTab === 4 && <ProtectedRoute><StatsEmpruntsPeriode /></ProtectedRoute>}
+            {selectedTab === 5 && <ProtectedRoute><Populaire /></ProtectedRoute>}
         </>
     );
 }
