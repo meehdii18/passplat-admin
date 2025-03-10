@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { 
+    Box,
+    CircularProgress, 
+    Typography,
+    Button
+} from "@mui/material";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -11,8 +16,9 @@ import {
     Title,
     Tooltip,
     Legend,
-    TimeScale
+    TimeScale,
 } from "chart.js";
+import DownloadIcon from '@mui/icons-material/Download';
 import theme from "../../theme.ts";
 import 'chartjs-adapter-date-fns';
 
@@ -24,6 +30,7 @@ const GrapheEmprunts = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const chartRef = useRef<ChartJS>(null);
 
     useEffect(() => {
         const fetchEmprunts = async () => {
@@ -73,17 +80,55 @@ const GrapheEmprunts = () => {
         fetchEmprunts();
     }, []);
 
+    const handleDownload = () => {
+        const chart = chartRef.current;
+        
+        if (chart && chart.canvas) {
+            try {
+                const canvas = chart.canvas;
+                chart.update();
+                const link = document.createElement('a');
+                link.download = `graphique-emprunts-${new Date().toISOString().split('T')[0]}.png`;                
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                link.href = dataUrl;
+                link.click();                
+            } catch (error) {
+                console.error('Erreur lors du téléchargement:', error);
+            }
+        } else {
+            console.error('La référence au graphique est null');
+        }
+    };
+
     return (
         <Box sx={{ padding: 4 }}>
-            <Typography variant="h4" color={theme.palette.primary.main} gutterBottom>
-                Évolution des emprunts au fil du temps
-            </Typography>
-
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                mb: 3 
+            }}>
+                <Typography variant="h4" color={theme.palette.primary.main}>
+                    Évolution des emprunts au fil du temps
+                </Typography>
+                {data && (
+                    <Button
+                        variant="contained"
+                        startIcon={<DownloadIcon />}
+                        onClick={handleDownload}
+                    >
+                        Télécharger
+                    </Button>
+                )}
+            </Box>
+    
             {loading && <CircularProgress />}
             {error && <Typography color="error">{error}</Typography>}
-            {data && (
+            {data && (  
                 <Line
+                    ref={chartRef}
                     data={data}
+                    redraw={true}
                     options={{
                         responsive: true,
                         plugins: {
