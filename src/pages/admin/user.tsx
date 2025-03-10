@@ -209,7 +209,9 @@ const AdminUserPage: React.FC = () => {
             user.nom.toLowerCase().includes(searchLower) ||
             user.prenom.toLowerCase().includes(searchLower) ||
             user.username.toLowerCase().includes(searchLower) ||
-            user.mail.toLowerCase().includes(searchLower)
+            user.mail.toLowerCase().includes(searchLower) ||
+            getRoleName(user.role).toLowerCase().includes(searchLower) ||
+            user.tel.includes(searchLower)
         );
     });
 
