@@ -22,7 +22,8 @@ import {
     FormControl,
     InputLabel,
     Alert,
-    Snackbar
+    Snackbar,
+    Checkbox
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,6 +31,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
+import EmailIcon from '@mui/icons-material/Email';
 import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -109,6 +111,8 @@ const AdminUserPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'asc' });
+    const [selectedEmails, setSelectedEmails] = useState<number[]>([]);
+    const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -271,6 +275,23 @@ const AdminUserPage: React.FC = () => {
             direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
         }));
     };
+
+    const handleCopyEmails = () => {
+        const emailList = users
+            .filter(user => selectedEmails.includes(user.id))
+            .map(user => user.mail)
+            .join('; ');
+        
+        navigator.clipboard.writeText(emailList)
+            .then(() => {
+                showSnackbar('Adresses email copiées avec succès', 'success');
+                setContactDialogOpen(false);
+                setSelectedEmails([]);
+            })
+            .catch(() => {
+                showSnackbar('Erreur lors de la copie des adresses email', 'error');
+            });
+    };
     
     return (
         <Container>
@@ -317,27 +338,35 @@ const AdminUserPage: React.FC = () => {
                 }}
             />
             <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-                setSelectedUser(null); 
-                setFormData({          
-                    tel: '',
-                    mail: '',
-                    adresse: '',
-                    nom: '',
-                    prenom: '',
-                    username: '',
-                    role: ROLES.USER,
-                    nbProlong: 0,
-                    mdp: '',
-                    estSupprime: 0
-                });
-                setOpenDialog(true);  
-            }}
-            sx={{ mb: 2 }}
+                variant="contained"
+                startIcon={<EmailIcon />}
+                onClick={() => setContactDialogOpen(true)}
+                sx={{ mb: 2 }}
             >
-                Ajouter un utilisateur
+                Contact 
+            </Button>
+            <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => {
+                    setSelectedUser(null); 
+                    setFormData({          
+                        tel: '',
+                        mail: '',
+                        adresse: '',
+                        nom: '',
+                        prenom: '',
+                        username: '',
+                        role: ROLES.USER,
+                        nbProlong: 0,
+                        mdp: '',
+                        estSupprime: 0
+                    });
+                    setOpenDialog(true);  
+                }}
+                sx={{ mb: 2 }}
+                >
+                    Ajouter un utilisateur
             </Button>
         </Box>
         
@@ -576,6 +605,85 @@ const AdminUserPage: React.FC = () => {
                 </Button>
             </DialogActions>
         </Dialog>
+
+        <Dialog
+            open={contactDialogOpen}
+            onClose={() => {
+                setContactDialogOpen(false);
+                setSelectedEmails([]);
+            }}
+            maxWidth="md"
+            fullWidth
+        >
+        <DialogTitle>
+            Sélectionner les utilisateurs à contacter
+        </DialogTitle>
+        <DialogContent>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell padding="checkbox">
+                                <Checkbox
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setSelectedEmails(users.map(u => u.id));
+                                        } else {
+                                            setSelectedEmails([]);
+                                        }
+                                    }}
+                                    checked={selectedEmails.length === users.length}
+                                    indeterminate={selectedEmails.length > 0 && selectedEmails.length < users.length}
+                                />
+                            </TableCell>
+                            <TableCell>Nom</TableCell>
+                            <TableCell>Prénom</TableCell>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Rôle</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {users.map((user) => (
+                            <TableRow key={user.id}>
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        checked={selectedEmails.includes(user.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedEmails([...selectedEmails, user.id]);
+                                            } else {
+                                                setSelectedEmails(selectedEmails.filter(id => id !== user.id));
+                                            }
+                                        }}
+                                    />
+                                </TableCell>
+                                <TableCell>{user.nom}</TableCell>
+                                <TableCell>{user.prenom}</TableCell>
+                                <TableCell>{user.mail}</TableCell>
+                                <TableCell>{getRoleName(user.role)}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={() => {
+                setContactDialogOpen(false);
+                setSelectedEmails([]);
+            }}>
+                Annuler
+            </Button>
+            <Button 
+                onClick={handleCopyEmails}
+                variant="contained"
+                color="primary"
+                disabled={selectedEmails.length === 0}
+            >
+                Copier les emails ({selectedEmails.length} sélectionné{selectedEmails.length > 1 ? 's' : ''})
+            </Button>
+        </DialogActions>
+    </Dialog>
 
             <Snackbar
                 open={snackbar.open}
