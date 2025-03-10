@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import {Container, TextField, Button, Typography, Card, CardContent, Paper} from '@mui/material';
+import {Container, TextField, Button, Typography, Box} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
+import { Line } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    TimeScale,
+} from "chart.js";
+import 'chartjs-adapter-date-fns';
+import DownloadIcon from '@mui/icons-material/Download';
+
+ChartJS.register(CategoryScale, LinearScale, TimeScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface Stats {
     nombreEmpruntTotal: number;
@@ -23,13 +39,47 @@ const StatsEmpruntsPeriode: React.FC = () => {
     {/* const [loading, setLoading] = useState<boolean>(false); */}
     const [error, setError] = useState<string | null>(null);
     const theme = useTheme();
+    const [graphData, setGraphData] = useState(null);
+    const chartRef = useRef<ChartJS>(null);
 
     const fetchStats = async (dateDebut: string, dateFin: string) => {
         { /* setLoading(true); */}
         setError(null);
         try {
-            const response = await axios.get<Stats>(`http://localhost:8080/stats/date?dateDebut=${dateDebut}&dateFin=${dateFin}`);
-            setStats(response.data);
+            const [statsResponse, empruntsResponse] = await Promise.all([
+                axios.get<Stats>(`http://localhost:8080/stats/date?dateDebut=${dateDebut}&dateFin=${dateFin}`),
+                axios.get(`http://localhost:8080/emprunt/getAll`)
+            ]);
+    
+            setStats(statsResponse.data);
+    
+            const dateDebutObj = new Date(dateDebut);
+            const dateFinObj = new Date(dateFin);
+            
+            const empruntsFiltres = empruntsResponse.data.filter((emprunt: { dateEmprunt: string | number | Date; }) => {
+                const dateEmprunt = new Date(emprunt.dateEmprunt);
+                return dateEmprunt >= dateDebutObj && dateEmprunt <= dateFinObj;
+            });
+    
+            const empruntsRefactored = empruntsFiltres.reduce((acc: { [x: string]: any; }, curr: { dateEmprunt: string | number | Date; quantite: any; }) => {
+                const date = new Date(curr.dateEmprunt).toISOString().split("T")[0];
+                acc[date] = (acc[date] || 0) + curr.quantite;
+                return acc;
+            }, {});
+    
+            const dates = Object.keys(empruntsRefactored).sort();
+            const nbEmprunts = dates.map((date) => empruntsRefactored[date]);
+    
+            setGraphData({
+                labels: dates,
+                datasets: [
+                    {
+                        label: "Nombre d'emprunts par jour",
+                        data: nbEmprunts,
+                        borderColor: theme.palette.secondary.main,
+                    },
+                ],
+            });
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 if (err.response) {
@@ -52,6 +102,26 @@ const StatsEmpruntsPeriode: React.FC = () => {
         event.preventDefault();
         if (dateDebut && dateFin) {
             fetchStats(dateDebut.format('YYYY-MM-DD'), dateFin.format('YYYY-MM-DD'));
+        }
+    };
+
+    const handleDownload = () => {
+        const chart = chartRef.current;
+        
+        if (chart && chart.canvas) {
+            try {
+                const canvas = chart.canvas;
+                chart.update();
+                const link = document.createElement('a');
+                link.download = `graphique-emprunts-periode-${dateDebut?.format('YYYY-MM-DD')}-${dateFin?.format('YYYY-MM-DD')}.png`;
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Erreur lors du téléchargement:', error);
+            }
         }
     };
 
@@ -88,30 +158,117 @@ const StatsEmpruntsPeriode: React.FC = () => {
                 {error && <Typography color="error">{error}</Typography>}
 
                 {stats && (
-                    <div>
-                        { /*{loading && <CircularProgress />} Possiblité d'ajouter un chargement mais clignotement car trop court*/ }
-                        <Typography variant="h4" gutterBottom sx={{ color: theme.palette.primary.main, fontWeight: 'bold', margin: '20px' }}>
-                            Stats pour la période sélectionnée
-                        </Typography>
-                        <Grid container spacing={2.5}>
-                            <Grid>
-                                <Card sx={{ backgroundColor: theme.palette.secondary.main }}>
-                                    <CardContent>
-                                        <Typography variant="h6">Nombre d'Emprunts Total</Typography>
-                                        <Typography variant="body1">{stats.nombreEmpruntTotal}</Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid>
-                                <Paper style={{ padding: "1rem", backgroundColor: theme.palette.secondary.main }}>
-                                    <Typography variant="h6">Nombre Emprunt Par Type</Typography>
-                                    <Typography variant="body1">S: {stats.nombreEmpruntParType.S}</Typography>
-                                    <Typography variant="body1">XL: {stats.nombreEmpruntParType.XL}</Typography>
-                                    <Typography variant="body1">M: {stats.nombreEmpruntParType.M}</Typography>
-                                </Paper>
-                            </Grid>
+                    <Grid container spacing={3} sx={{ mt: 2 }}>
+                        <Grid xs={12} md={4}>
+                            <Box sx={{ 
+                                p: 3, 
+                                bgcolor: theme.palette.secondary.main,
+                                borderRadius: 1,
+                                boxShadow: 1
+                            }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Emprunts Totaux
+                                </Typography>
+                                <Typography variant="h4" color="primary">
+                                    {stats.nombreEmpruntTotal}
+                                </Typography>
+                            </Box>
                         </Grid>
-                    </div>
+                        <Grid xs={12} md={8}>
+                            <Box sx={{ 
+                                p: 3, 
+                                bgcolor: theme.palette.secondary.main,
+                                borderRadius: 1,
+                                boxShadow: 1
+                            }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Répartition par Type
+                                </Typography>
+                                <Grid container spacing={2}>
+                                    <Grid xs={4}>
+                                        <Typography variant="subtitle1">
+                                            Type S
+                                        </Typography>
+                                        <Typography variant="h5" color="primary">
+                                            {stats.nombreEmpruntParType.S}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid xs={4}>
+                                        <Typography variant="subtitle1">
+                                            Type M
+                                        </Typography>
+                                        <Typography variant="h5" color="primary">
+                                            {stats.nombreEmpruntParType.M}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid xs={4}>
+                                        <Typography variant="subtitle1">
+                                            Type XL
+                                        </Typography>
+                                        <Typography variant="h5" color="primary">
+                                            {stats.nombreEmpruntParType.XL}
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Grid>
+                    </Grid>
+                )}
+
+                {stats && graphData && (
+                    <Box sx={{ mt: 4 }}>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center', 
+                            mb: 3 
+                        }}>
+                            <Typography variant="h5" color={theme.palette.primary.main}>
+                                Graphique des emprunts sur la période
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                startIcon={<DownloadIcon />}
+                                onClick={handleDownload}
+                            >
+                                Télécharger
+                            </Button>
+                        </Box>
+                        
+                        <Line
+                            ref={chartRef}
+                            data={graphData}
+                            redraw={true}
+                            options={{
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: "top",
+                                        labels: {
+                                            color: theme.palette.primary.main,
+                                        }
+                                    },
+                                },
+                                scales: {
+                                    x: {
+                                        type: 'time',
+                                        time: {
+                                            displayFormats: {
+                                                day: 'dd MMM yyyy',
+                                            },
+                                        },
+                                    },
+                                    y: {
+                                        ticks: {
+                                            callback: function(value) {
+                                                return Number.isInteger(value) ? value : null;
+                                            },
+                                        },
+                                    },
+                                },
+                            }}
+                        />
+                    </Box>
                 )}
             </Container>
         </LocalizationProvider>
