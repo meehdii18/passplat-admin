@@ -62,6 +62,7 @@ interface Stock {
     diffuseur: Diffuseur;
     contenant: Contenant;
     quantite: number;
+    dateAjout: string | null;
     idDiffuseur: number;
     idContenant: number;
 }
@@ -317,44 +318,58 @@ const AdminStockPage: React.FC = () => {
                     {/* Tableau */}
                     <TableContainer sx={{ boxShadow: 2, borderRadius: 1 }}>
                         <Table>
-                            <TableHead>
-                                <TableRow sx={{ bgcolor: theme.palette.grey[100] }}>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Contenant</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Quantité</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                        <TableHead>
+                            <TableRow sx={{ bgcolor: theme.palette.grey[100] }}>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Contenant</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Quantité</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Date d'ajout</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {stocks.map((stock) => (
+                                <TableRow 
+                                    key={stock.id}
+                                    sx={{ '&:hover': { bgcolor: theme.palette.action.hover } }}
+                                >
+                                    <TableCell>
+                                        <Typography variant="body1">{stock.contenant.nom}</Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body1" fontWeight="medium">
+                                            {stock.quantite}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2">
+                                            {stock.dateAjout 
+                                                ? new Date(stock.dateAjout).toLocaleDateString('fr-FR', {
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })
+                                                : 'Non spécifié'}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <IconButton
+                                            color="error"
+                                            onClick={() => handleDeleteConfirmOpen(stock.id)}
+                                            size="small"
+                                            sx={{ 
+                                                '&:hover': { 
+                                                    bgcolor: theme.palette.error.light 
+                                                }
+                                            }}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </TableCell>
                                 </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {stocks.map((stock) => (
-                                    <TableRow 
-                                        key={stock.id}
-                                        sx={{ '&:hover': { bgcolor: theme.palette.action.hover } }}
-                                    >
-                                        <TableCell>
-                                            <Typography variant="body1">{stock.contenant.nom}</Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body1" fontWeight="medium">
-                                                {stock.quantite}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleDeleteConfirmOpen(stock.id)}
-                                                size="small"
-                                                sx={{ 
-                                                    '&:hover': { 
-                                                        bgcolor: theme.palette.error.light 
-                                                    }
-                                                }}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
+                            ))}
+                        </TableBody>
                         </Table>
                     </TableContainer>
                 </Paper>
