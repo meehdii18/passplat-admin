@@ -217,29 +217,37 @@ const AdminStockPage: React.FC = () => {
     };
     
     return (
-        <Container>
-        <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mb: 3
-        }}>
-            <Button
-            variant="outlined"
-            onClick={handleBack}
-            startIcon={<ArrowBackIcon />}
-            >
-            Retour
-            </Button>
-            <Typography variant="h4" sx={{ color: theme.palette.primary.main, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-            Gestion des Stocks
-            </Typography>
-
-        </Box>
-
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 4,
+                position: 'relative'
+            }}>
+                <Button
+                    variant="outlined"
+                    onClick={handleBack}
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ minWidth: 100 }}
+                >
+                    Retour
+                </Button>
+                <Typography 
+                    variant="h4" 
+                    sx={{ 
+                        color: theme.palette.primary.main, 
+                        position: 'absolute', 
+                        left: '50%', 
+                        transform: 'translateX(-50%)',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Gestion des Stocks
+                </Typography>
+            </Box>
     
-            {/* Sélection du diffuseur */}
-            <Box sx={{ mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
                 <FormControl fullWidth>
                     <InputLabel>Sélectionner un diffuseur</InputLabel>
                     <Select
@@ -256,15 +264,35 @@ const AdminStockPage: React.FC = () => {
                         ))}
                     </Select>
                 </FormControl>
-            </Box>
+            </Paper>
     
-            {/* Affichage du stock seulement si un diffuseur est sélectionné */}
             {selectedDiffuseur && (
-                <>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Typography variant="h5" color="secondary">
-                            Stock de {selectedDiffuseur.nom}
+                <Paper elevation={3} sx={{ p: 3 }}>
+                    {/* Info du diffuseur */}
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="h5" sx={{ color: theme.palette.secondary.main, mb: 2 }}>
+                            {selectedDiffuseur.nom}
                         </Typography>
+                        <Box sx={{ display: 'flex', gap: 4 }}>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">Contact</Typography>
+                                <Typography variant="body2">
+                                    {selectedDiffuseur.account.nom} {selectedDiffuseur.account.prenom}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">Email</Typography>
+                                <Typography variant="body2">{selectedDiffuseur.account.mail}</Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="subtitle2" color="textSecondary">Téléphone</Typography>
+                                <Typography variant="body2">{selectedDiffuseur.account.tel}</Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    {/* Bouton d'ajout */}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
                         <Button
                             variant="contained"
                             startIcon={<AddIcon />}
@@ -275,41 +303,51 @@ const AdminStockPage: React.FC = () => {
                                 });
                                 setOpenDialog(true);
                             }}
+                            sx={{ 
+                                bgcolor: theme.palette.secondary.main,
+                                '&:hover': {
+                                    bgcolor: theme.palette.secondary.dark,
+                                }
+                            }}
                         >
                             Ajouter un stock
                         </Button>
                     </Box>
-    
-                    <TableContainer component={Paper}>
+
+                    {/* Tableau */}
+                    <TableContainer sx={{ boxShadow: 2, borderRadius: 1 }}>
                         <Table>
                             <TableHead>
-                                <TableRow>
-                                    <TableCell>Diffuseur</TableCell>
-                                    <TableCell>Contact</TableCell>
-                                    <TableCell>Contenant</TableCell>
-                                    <TableCell>Quantité</TableCell>
-                                    <TableCell>Actions</TableCell>
+                                <TableRow sx={{ bgcolor: theme.palette.grey[100] }}>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Contenant</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Quantité</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {stocks.map((stock) => (
-                                    <TableRow key={stock.id}>
+                                    <TableRow 
+                                        key={stock.id}
+                                        sx={{ '&:hover': { bgcolor: theme.palette.action.hover } }}
+                                    >
                                         <TableCell>
-                                            <Typography variant="body1">{stock.diffuseur.nom}</Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {stock.diffuseur.account.nom} {stock.diffuseur.account.prenom}
+                                            <Typography variant="body1">{stock.contenant.nom}</Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body1" fontWeight="medium">
+                                                {stock.quantite}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2">{stock.diffuseur.account.mail}</Typography>
-                                            <Typography variant="body2">{stock.diffuseur.account.tel}</Typography>
-                                        </TableCell>
-                                        <TableCell>{stock.contenant.nom}</TableCell>
-                                        <TableCell>{stock.quantite}</TableCell>
                                         <TableCell>
                                             <IconButton
                                                 color="error"
                                                 onClick={() => handleDeleteConfirmOpen(stock.id)}
+                                                size="small"
+                                                sx={{ 
+                                                    '&:hover': { 
+                                                        bgcolor: theme.palette.error.light 
+                                                    }
+                                                }}
                                             >
                                                 <DeleteIcon />
                                             </IconButton>
@@ -319,30 +357,21 @@ const AdminStockPage: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                </>
+                </Paper>
             )}
-
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+    
+            <Dialog 
+                open={openDialog} 
+                onClose={() => setOpenDialog(false)}
+                PaperProps={{
+                    sx: { borderRadius: 2 }
+                }}
+            >
                 <form onSubmit={handleSubmit}>
-                    <DialogTitle>
+                    <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
                         {selectedStock ? 'Modifier un stock' : 'Ajouter un stock'}
                     </DialogTitle>
-                    <DialogContent>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Diffuseur</InputLabel>
-                            <Select
-                                value={formData.idDiffuseur}
-                                onChange={(e) => setFormData({...formData, idDiffuseur: Number(e.target.value)})}
-                                required
-                            >
-                                {diffuseurs.map((diffuseur) => (
-                                    <MenuItem key={diffuseur.id} value={diffuseur.id}>
-                                        {diffuseur.nom}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
+                    <DialogContent sx={{ mt: 2 }}>
                         <FormControl fullWidth margin="normal">
                             <InputLabel>Contenant</InputLabel>
                             <Select
@@ -357,7 +386,7 @@ const AdminStockPage: React.FC = () => {
                                 ))}
                             </Select>
                         </FormControl>
-
+    
                         <TextField
                             fullWidth
                             label="Quantité"
@@ -369,28 +398,34 @@ const AdminStockPage: React.FC = () => {
                             inputProps={{ min: 0 }}
                         />
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
+                    <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+                        <Button onClick={() => setOpenDialog(false)}>
+                            Annuler
+                        </Button>
                         <Button type="submit" variant="contained" color="primary">
                             {selectedStock ? 'Modifier' : 'Ajouter'}
                         </Button>
                     </DialogActions>
                 </form>
             </Dialog>
-
-            {/* Dialog de confirmation de suppression */}
+    
             <Dialog
                 open={deleteConfirmDialog.open}
                 onClose={() => setDeleteConfirmDialog({ ...deleteConfirmDialog, open: false })}
+                PaperProps={{
+                    sx: { borderRadius: 2 }
+                }}
             >
-                <DialogTitle>Confirmer la suppression</DialogTitle>
-                <DialogContent>
+                <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    Confirmer la suppression
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
                     <Typography>
                         Êtes-vous sûr de vouloir supprimer ce stock ?
                         Cette action est irréversible.
                     </Typography>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
                     <Button 
                         onClick={() => setDeleteConfirmDialog({ ...deleteConfirmDialog, open: false })}
                     >
@@ -400,6 +435,11 @@ const AdminStockPage: React.FC = () => {
                         onClick={handleDelete} 
                         color="error" 
                         variant="contained"
+                        sx={{ 
+                            '&:hover': { 
+                                bgcolor: theme.palette.error.dark 
+                            }
+                        }}
                     >
                         Supprimer
                     </Button>
@@ -410,16 +450,20 @@ const AdminStockPage: React.FC = () => {
                 open={snackbar.open}
                 autoHideDuration={6000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
                 <Alert 
                     severity={snackbar.severity} 
                     onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    variant="filled"
+                    sx={{ width: '100%' }}
                 >
                     {snackbar.message}
                 </Alert>
             </Snackbar>
         </Container>
     );
+
 };
 
 export default AdminStockPage;
