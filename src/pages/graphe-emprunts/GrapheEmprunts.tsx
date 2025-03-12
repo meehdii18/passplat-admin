@@ -40,6 +40,9 @@ import { alpha } from '@mui/material/styles';
 import theme from "../../theme.ts";
 import 'chartjs-adapter-date-fns';
 import { fr } from 'date-fns/locale';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import 'dayjs/locale/fr';
 
 ChartJS.register(
     CategoryScale, 
@@ -192,12 +195,16 @@ const GrapheEmprunts = () => {
 
     const formatDate = (dateString: string) => {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', { 
-            day: 'numeric',
-            month: 'long', 
-            year: 'numeric'
-        });
+        try {
+            const date = dayjs(dateString);
+            if (date.isValid()) {
+                return date.locale('fr').format('DD MMMM YYYY');
+            }
+            return 'Date non disponible';
+        } catch (error) {
+            console.error('Erreur de formatage de date:', error, dateString);
+            return 'Date non disponible';
+        }
     };
 
     if (loading) {
@@ -486,9 +493,27 @@ const GrapheEmprunts = () => {
                                             usePointStyle: true,
                                             borderWidth: 1,
                                             borderColor: theme.palette.divider,
+                                            // Ajoutez ces callbacks
                                             callbacks: {
                                                 title: function(context) {
-                                                    return formatDate(context[0].label);
+                                                    if (!context.length) return 'Date inconnue';
+                                                    
+                                                    // Récupérer la date à partir du point sélectionné
+                                                    const rawDate = context[0].parsed.x;
+                                                    
+                                                    // Formater la date en français
+                                                    if (rawDate) {
+                                                        const date = new Date(rawDate);
+                                                        return date.toLocaleDateString('fr-FR', {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric'
+                                                        });
+                                                    }
+                                                    return 'Date non disponible';
+                                                },
+                                                label: function(context) {
+                                                    return `Nombre d'emprunts: ${context.parsed.y}`;
                                                 }
                                             }
                                         }

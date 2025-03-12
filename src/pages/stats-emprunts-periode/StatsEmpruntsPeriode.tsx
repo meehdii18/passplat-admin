@@ -614,7 +614,30 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                                         boxPadding: 4,
                                                         usePointStyle: true,
                                                         borderWidth: 1,
-                                                        borderColor: theme.palette.divider
+                                                        borderColor: theme.palette.divider,
+                                                        // Ajoutez ces callbacks
+                                                        callbacks: {
+                                                            title: function(context) {
+                                                                if (!context.length) return 'Date inconnue';
+                                                                
+                                                                // Récupérer la date à partir du point sélectionné
+                                                                const rawDate = context[0].parsed.x;
+                                                                
+                                                                // Formater la date en français
+                                                                if (rawDate) {
+                                                                    const date = new Date(rawDate);
+                                                                    return date.toLocaleDateString('fr-FR', {
+                                                                        day: 'numeric',
+                                                                        month: 'long',
+                                                                        year: 'numeric'
+                                                                    });
+                                                                }
+                                                                return 'Date non disponible';
+                                                            },
+                                                            label: function(context) {
+                                                                return `Nombre d'emprunts: ${context.parsed.y}`;
+                                                            }
+                                                        }
                                                     }
                                                 },
                                                 scales: {
