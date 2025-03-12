@@ -9,12 +9,28 @@ import {
     Button,
     Box,
     Menu,
-    MenuItem
+    MenuItem,
+    Paper,
+    IconButton,
+    Tooltip,
+    Divider,
+    Fade,
+    useMediaQuery
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DownloadIcon from '@mui/icons-material/Download';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import PersonIcon from '@mui/icons-material/Person';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
+import PercentIcon from '@mui/icons-material/Percent';
+import NatureIcon from '@mui/icons-material/Nature';
 import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 
 interface Stats {
     nombreUtilisateur: number;
@@ -43,8 +59,8 @@ const StatsTotales: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const theme = useTheme();
-    const cardStyle = { backgroundColor: theme.palette.secondary.main };
-
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    
     useEffect(() => {
         const fetchStats = async () => {
             try {
@@ -73,16 +89,36 @@ const StatsTotales: React.FC = () => {
 
     if (loading) {
         return (
-            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-                <CircularProgress />
-            </Container>
+            <Box 
+                sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    minHeight: '100vh',
+                    bgcolor: alpha(theme.palette.primary.main, 0.03)
+                }}
+            >
+                <CircularProgress size={60} thickness={4} />
+                <Typography variant="h6" sx={{ mt: 2 }}>Chargement des statistiques...</Typography>
+            </Box>
         );
     }
 
     if (error) {
         return (
-            <Container sx={{ textAlign: 'center', mt: 4 }}>
-                <Typography color="error">{error}</Typography>
+            <Container 
+                sx={{ 
+                    textAlign: 'center', 
+                    mt: 4,
+                    p: 4, 
+                    bgcolor: alpha(theme.palette.error.main, 0.05),
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.error.light}`
+                }}
+            >
+                <Typography variant="h5" color="error" gutterBottom>Erreur</Typography>
+                <Typography>{error}</Typography>
             </Container>
         );
     }
@@ -94,6 +130,21 @@ const StatsTotales: React.FC = () => {
             </Container>
         );
     }
+
+    const getIconForStat = (index: number) => {
+        const icons = [
+            <PersonIcon fontSize="large" />,
+            <StorefrontIcon fontSize="large" />,
+            <LocalShippingIcon fontSize="large" />,
+            <SwapHorizIcon fontSize="large" />,
+            <InventoryIcon fontSize="large" />,
+            <CheckCircleIcon fontSize="large" />,
+            <PendingIcon fontSize="large" />,
+            <PercentIcon fontSize="large" />,
+            <NatureIcon fontSize="large" /> 
+        ];
+        return icons[index];
+    };
 
     const statsData = [
         { label: "Nombre d'Utilisateurs", value: stats.nombreUtilisateur },
@@ -159,74 +210,279 @@ const StatsTotales: React.FC = () => {
     };
 
     return (
-        <Container sx={{ py: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box 
+            sx={{ 
+                minHeight: '100vh',
+                bgcolor: alpha(theme.palette.primary.main, 0.03),
+                py: 4
+            }}
+        >
+            <Container>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 3,
+                        mb: 4,
+                        borderRadius: 2,
+                        backgroundColor: 'white',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                >
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        gap: isMobile ? 2 : 0
+                    }}>
+                        <Box>
+                            <Typography 
+                                variant="h4" 
+                                sx={{ 
+                                    color: theme.palette.primary.main, 
+                                    fontWeight: 'bold',
+                                    mb: 1 
+                                }}
+                            >
+                                Statistiques Globales
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                Vue d'ensemble des données du système
+                            </Typography>
+                        </Box>
+                        <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<DownloadIcon />}
+                            onClick={handleExportClick}
+                            sx={{
+                                borderRadius: '24px',
+                                px: 3,
+                                boxShadow: 2
+                            }}
+                        >
+                            Exporter
+                        </Button>
+                    </Box>
+                </Paper>
+
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                    TransitionComponent={Fade}
+                    elevation={3}
+                >
+                    <MenuItem onClick={exportToCSV}>
+                        <FileDownloadIcon sx={{ mr: 1 }} />
+                        Format CSV
+                    </MenuItem>
+                    <MenuItem onClick={exportToXLS}>
+                        <FileDownloadIcon sx={{ mr: 1 }} />
+                        Format XLS
+                    </MenuItem>
+                    <MenuItem onClick={exportToTXT}>
+                        <FileDownloadIcon sx={{ mr: 1 }} />
+                        Format TXT
+                    </MenuItem>
+                </Menu>
+                
                 <Typography 
-                    variant="h4" 
-                    gutterBottom 
-                    sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}
+                    variant="h6" 
+                    sx={{ 
+                        mb: 3, 
+                        ml: 1, 
+                        color: theme.palette.text.secondary,
+                        fontWeight: 'medium'
+                    }}
                 >
-                    Stats Totales
+                    Statistiques Générales
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleExportClick}
+                
+                <Grid container spacing={3}>
+                    {statsData.map((stat, index) => (
+                        <Grid key={index} xs={12} sm={6} md={4}>
+                            <Card 
+                                elevation={0}
+                                sx={{
+                                    height: '100%',
+                                    borderRadius: 2,
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                                    }
+                                }}
+                            >
+                                <Box 
+                                    sx={{ 
+                                        height: 8, 
+                                        bgcolor: theme.palette.primary.main,
+                                        width: '100%'
+                                    }}
+                                />
+                                <CardContent sx={{ p: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <Box 
+                                            sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center',
+                                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                                color: theme.palette.primary.main,
+                                                borderRadius: '50%',
+                                                p: 1.5,
+                                                mr: 2
+                                            }}
+                                        >
+                                            {getIconForStat(index)}
+                                        </Box>
+                                        <Typography variant="h5" fontWeight="bold" color="text.primary">
+                                            {stat.value}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="subtitle1" sx={{ color: theme.palette.text.secondary }}>
+                                        {stat.label}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+                
+                <Typography 
+                    variant="h6" 
+                    sx={{ 
+                        mt: 6, 
+                        mb: 3, 
+                        ml: 1, 
+                        color: theme.palette.text.secondary,
+                        fontWeight: 'medium'
+                    }}
                 >
-                    Exporter
-                </Button>
-            </Box>
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-            >
-                <MenuItem onClick={exportToCSV}>
-                    <FileDownloadIcon sx={{ mr: 1 }} />
-                    Format CSV
-                </MenuItem>
-                <MenuItem onClick={exportToXLS}>
-                    <FileDownloadIcon sx={{ mr: 1 }} />
-                    Format XLS
-                </MenuItem>
-                <MenuItem onClick={exportToTXT}>
-                    <FileDownloadIcon sx={{ mr: 1 }} />
-                    Format TXT
-                </MenuItem>
-            </Menu>
-            <Grid container spacing={3}>
-                {statsData.map((stat, index) => (
-                    <Grid key={index} item xs={12} sm={6} md={4}>
-                        <Card sx={cardStyle}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>{stat.label}</Typography>
-                                <Typography variant="body1">{stat.value}</Typography>
+                    Détails par Type de Contenant
+                </Typography>
+                
+                <Grid container spacing={3}>
+                    <Grid xs={12} md={6}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                height: '100%',
+                                borderRadius: 2,
+                                overflow: 'hidden',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    height: 8, 
+                                    bgcolor: theme.palette.secondary.main,
+                                    width: '100%'
+                                }}
+                            />
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                    <InventoryIcon 
+                                        sx={{ 
+                                            fontSize: 28, 
+                                            color: theme.palette.secondary.main,
+                                            mr: 1.5
+                                        }}
+                                    />
+                                    <Typography variant="h6" fontWeight="bold">
+                                        Nombre d'Emprunts Par Contenant
+                                    </Typography>
+                                </Box>
+                                <Divider sx={{ mb: 2 }} />
+                                <Grid container spacing={2}>
+                                    {['S', 'M', 'XL'].map((size) => (
+                                        <Grid key={size} xs={4}>
+                                            <Paper
+                                                elevation={0}
+                                                sx={{ 
+                                                    p: 2, 
+                                                    textAlign: 'center',
+                                                    bgcolor: alpha(theme.palette.secondary.main, 0.05),
+                                                    borderRadius: 2
+                                                }}
+                                            >
+                                                <Typography variant="h5" fontWeight="bold" color="secondary">
+                                                    {stats.nombreEmpruntParContenant[size as keyof typeof stats.nombreEmpruntParContenant] || 0}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                                    {size}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
+                                </Grid>
                             </CardContent>
                         </Card>
                     </Grid>
-                ))}
-                <Grid xs={12} sm={6} md={4}>
-                    <Card sx={cardStyle}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>Nombre Emprunt Par Contenant</Typography>
-                            <Typography variant="body1">S: {stats.nombreEmpruntParContenant?.S || 0}</Typography>
-                            <Typography variant="body1">XL: {stats.nombreEmpruntParContenant?.XL || 0}</Typography>
-                            <Typography variant="body1">M: {stats.nombreEmpruntParContenant?.M || 0}</Typography>
-                        </CardContent>
-                    </Card>
+                    
+                    <Grid xs={12} md={6}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                height: '100%',
+                                borderRadius: 2,
+                                overflow: 'hidden',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    height: 8, 
+                                    bgcolor: theme.palette.success.main,
+                                    width: '100%'
+                                }}
+                            />
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                    <StorefrontIcon 
+                                        sx={{ 
+                                            fontSize: 28, 
+                                            color: theme.palette.success.main,
+                                            mr: 1.5
+                                        }}
+                                    />
+                                    <Typography variant="h6" fontWeight="bold">
+                                        Stock de Contenants Par Type
+                                    </Typography>
+                                </Box>
+                                <Divider sx={{ mb: 2 }} />
+                                <Grid container spacing={2}>
+                                    {['S', 'M', 'XL'].map((size) => (
+                                        <Grid key={size} xs={4}>
+                                            <Paper
+                                                elevation={0}
+                                                sx={{ 
+                                                    p: 2, 
+                                                    textAlign: 'center',
+                                                    bgcolor: alpha(theme.palette.success.main, 0.05),
+                                                    borderRadius: 2
+                                                }}
+                                            >
+                                                <Typography variant="h5" fontWeight="bold" color="success.dark">
+                                                    {stats.stockContenantParType[size as keyof typeof stats.stockContenantParType] || 0}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                                                    {size}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Grid>
                 </Grid>
-                <Grid xs={12} sm={6} md={4}>
-                    <Card sx={cardStyle}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>Stock Contenant Par Type</Typography>
-                            <Typography variant="body1">S: {stats.stockContenantParType?.S || 0}</Typography>
-                            <Typography variant="body1">XL: {stats.stockContenantParType?.XL || 0}</Typography>
-                            <Typography variant="body1">M: {stats.stockContenantParType?.M || 0}</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-        </Container>
+            </Container>
+        </Box>
     );
 };
 
