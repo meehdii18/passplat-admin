@@ -11,7 +11,6 @@ import Connexion from './pages/connexion/Connexion';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import Populaire from './pages/populaire/Populaire.tsx';
 import { useNavigate } from 'react-router-dom';
-import logoPassplat from '../public/logo-passplat.png'
 
 function App() {
     const [selectedTab, setSelectedTab] = React.useState(1);
