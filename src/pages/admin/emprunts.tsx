@@ -511,14 +511,6 @@ const AdminEmpruntPage: React.FC = () => {
                         gap: isMobile ? 2 : 0
                     }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Button
-                                variant="outlined"
-                                onClick={handleBack}
-                                startIcon={<ArrowBackIcon />}
-                                sx={{ mr: 2 }}
-                            >
-                                Retour
-                            </Button>
                             <Typography 
                                 variant="h4" 
                                 sx={{ 
@@ -529,6 +521,17 @@ const AdminEmpruntPage: React.FC = () => {
                                 Gestion des Emprunts
                             </Typography>
                         </Box>
+                        <Button
+                            variant="outlined"
+                            onClick={handleBack}
+                            startIcon={<ArrowBackIcon />}
+                            sx={{
+                                borderRadius: '24px',
+                                px: 2
+                            }}
+                        >
+                            Retour au tableau de bord
+                        </Button>
                         <Button
                             variant="contained"
                             startIcon={<AddIcon />}
