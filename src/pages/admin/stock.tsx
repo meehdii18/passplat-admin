@@ -236,6 +236,24 @@ const AdminStockPage: React.FC = () => {
         }
     };
 
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return 'Date invalide';
+            }
+            return date.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        } catch (error) {
+            console.error('Erreur de formatage de date:', error);
+            return 'Date invalide';
+        }
+    };
+
     const handleBack = () => {
         navigate('/');
     }
@@ -666,9 +684,11 @@ const AdminStockPage: React.FC = () => {
                                         <Table>
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell width="40%">Type de contenant</TableCell>
-                                                    <TableCell width="20%">Quantité</TableCell>
-                                                    <TableCell width="40%">Actions</TableCell>
+                                                    <TableCell width="30%">Type de contenant</TableCell>
+                                                    <TableCell width="15%">Taille</TableCell>
+                                                    <TableCell width="15%">Quantité</TableCell>
+                                                    <TableCell width="25%">Date d'ajout</TableCell>
+                                                    <TableCell width="15%">Actions</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -687,6 +707,26 @@ const AdminStockPage: React.FC = () => {
                                                             </Typography>
                                                         </TableCell>
                                                         <TableCell>
+                                                            <Chip
+                                                                icon={
+                                                                    <SquareFootIcon 
+                                                                        sx={{ 
+                                                                            fontSize: stock.contenant.type === 'S' ? '0.8rem' : 
+                                                                                    stock.contenant.type === 'M' ? '1rem' : '1.2rem' 
+                                                                        }}
+                                                                    />
+                                                                }
+                                                                label={stock.contenant.type || 'Non défini'}
+                                                                size="small"
+                                                                sx={{ 
+                                                                    bgcolor: alpha(getStockTypeColor(stock.contenant.type), 0.1),
+                                                                    color: getStockTypeColor(stock.contenant.type),
+                                                                    fontWeight: 'medium',
+                                                                    borderRadius: '6px'
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
                                                             <Typography 
                                                                 variant="body2" 
                                                                 fontWeight="bold"
@@ -694,6 +734,17 @@ const AdminStockPage: React.FC = () => {
                                                             >
                                                                 {stock.quantite}
                                                             </Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {stock.dateAjout ? (
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {formatDate(stock.dateAjout)}
+                                                                </Typography>
+                                                            ) : (
+                                                                <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                                                                    Non spécifiée
+                                                                </Typography>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell>
                                                             <Tooltip title="Supprimer">
