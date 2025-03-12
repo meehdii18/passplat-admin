@@ -61,6 +61,11 @@ function App() {
         handleAdminMenuClose();
     };
 
+    const handleStock = () => {
+        navigate("/admin/stock");
+        handleAdminMenuClose();
+    }
+
     return (
         <>
         <Box sx={{ 
@@ -116,6 +121,7 @@ function App() {
                     >
                         <MenuItem onClick={handleUserManagement}>Gestion des utilisateurs</MenuItem>
                         <MenuItem onClick={handleEmprunt}>Gestion des emprunts</MenuItem>
+                        <MenuItem onClick={handleStock}>Gestion des stocks</MenuItem>
                     </Menu>
                     <Button 
                         onClick={handleLogoutClick}
