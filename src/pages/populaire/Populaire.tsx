@@ -251,7 +251,7 @@ const Populaire = () => {
                     </Box>
                 </Paper>
 
-                <Grid container spacing={3}>
+                <Grid container spacing={12}>
                     {/* TOP EMPRUNTEURS */}
                     <Grid xs={12} md={4}>
                         <Card 

@@ -72,65 +72,81 @@ function App() {
             borderColor: 'divider', 
             marginBottom: 2,
             display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
             justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '8px 16px'
+            alignItems: { xs: 'stretch', md: 'center' },
+            padding: { xs: '8px', md: '8px 16px' },
+            gap: { xs: 2, md: 0 }
         }}>
             <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center'
+            display: 'flex', 
+            alignItems: 'center',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 2, sm: 0 }
             }}>
-                <img 
-                    src="/logo-passplat.png" 
-                    alt="Logo PassPlat" 
-                    style={{ 
-                        height: '40px',
-                        marginRight: '24px'
-                    }} 
-                />
-                <Tabs value={selectedTab} onChange={handleTabChange}>
-                    <Tab label="Stats totales" value={1}/>
-                    <Tab label="Graphe des emprunts" value={2}/>
-                    <Tab label="Stats diffuseurs" value={3}/>
-                    <Tab label="Stats par période" value={4}/>
-                    <Tab label="Populaire" value={5}/>
-                </Tabs>
+            <img 
+                src="/logo-passplat.png" 
+                alt="Logo PassPlat" 
+                style={{ 
+                height: '40px',
+                marginRight: { xs: '0', sm: '24px' }
+                }} 
+            />
+            <Tabs 
+                value={selectedTab} 
+                onChange={handleTabChange}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                maxWidth: '100%'
+                }}
+            >
+                <Tab label="Stats totales" value={1}/>
+                <Tab label="Graphe des emprunts" value={2}/>
+                <Tab label="Stats diffuseurs" value={3}/>
+                <Tab label="Stats par période" value={4}/>
+                <Tab label="Populaire" value={5}/>
+            </Tabs>
             </Box>
-    
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <IconButton
-                        aria-label="admin"
-                        onClick={handleAdminMenuOpen}
-                        color="primary"
-                        sx={{ ml: 5 }}
-                        aria-controls={open ? 'admin-menu' : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? 'true' : undefined}
-                    >
-                        <AdminPanelSettingsIcon />
-                    </IconButton>
-                    <Menu
-                        id="admin-menu"
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleAdminMenuClose}
-                        MenuListProps={{
-                            'aria-labelledby': 'admin-button',
-                        }}
-                    >
-                        <MenuItem onClick={handleUserManagement}>Gestion des utilisateurs</MenuItem>
-                        <MenuItem onClick={handleEmprunt}>Gestion des emprunts</MenuItem>
-                        <MenuItem onClick={handleStock}>Gestion des stocks</MenuItem>
-                    </Menu>
-                    <Button 
-                        onClick={handleLogoutClick}
-                        variant="outlined"
-                        color="primary"
-                        sx={{ ml: 2 }} 
-                    >
-                        Déconnexion
-                    </Button>
-                </Box>
+        
+            <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            justifyContent: { xs: 'center', md: 'flex-end' }
+            }}>
+                <IconButton
+                aria-label="admin"
+                onClick={handleAdminMenuOpen}
+                color="primary"
+                sx={{ ml: { md: 5 } }}
+                aria-controls={open ? 'admin-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                >
+                <AdminPanelSettingsIcon />
+                </IconButton>
+                <Menu
+                id="admin-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleAdminMenuClose}
+                MenuListProps={{
+                    'aria-labelledby': 'admin-button',
+                }}
+                >
+                <MenuItem onClick={handleUserManagement}>Gestion des utilisateurs</MenuItem>
+                <MenuItem onClick={handleEmprunt}>Gestion des emprunts</MenuItem>
+                <MenuItem onClick={handleStock}>Gestion des stocks</MenuItem>
+                </Menu>
+                <Button 
+                onClick={handleLogoutClick}
+                variant="outlined"
+                color="primary"
+                sx={{ ml: 2 }} 
+                >
+                Déconnexion
+                </Button>
+            </Box>
             </Box>
 
             <Dialog
