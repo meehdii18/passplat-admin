@@ -685,9 +685,8 @@ const AdminStockPage: React.FC = () => {
                                             <TableHead>
                                                 <TableRow>
                                                     <TableCell width="30%">Type de contenant</TableCell>
-                                                    <TableCell width="15%">Taille</TableCell>
                                                     <TableCell width="15%">Quantité</TableCell>
-                                                    <TableCell width="25%">Date d'ajout</TableCell>
+                                                    <TableCell width="35%">Date d'ajout</TableCell>
                                                     <TableCell width="15%">Actions</TableCell>
                                                 </TableRow>
                                             </TableHead>
@@ -705,26 +704,6 @@ const AdminStockPage: React.FC = () => {
                                                             <Typography variant="body2" fontWeight="medium">
                                                                 {stock.contenant.nom}
                                                             </Typography>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Chip
-                                                                icon={
-                                                                    <SquareFootIcon 
-                                                                        sx={{ 
-                                                                            fontSize: stock.contenant.type === 'S' ? '0.8rem' : 
-                                                                                    stock.contenant.type === 'M' ? '1rem' : '1.2rem' 
-                                                                        }}
-                                                                    />
-                                                                }
-                                                                label={stock.contenant.type || 'Non défini'}
-                                                                size="small"
-                                                                sx={{ 
-                                                                    bgcolor: alpha(getStockTypeColor(stock.contenant.type), 0.1),
-                                                                    color: getStockTypeColor(stock.contenant.type),
-                                                                    fontWeight: 'medium',
-                                                                    borderRadius: '6px'
-                                                                }}
-                                                            />
                                                         </TableCell>
                                                         <TableCell>
                                                             <Typography 
