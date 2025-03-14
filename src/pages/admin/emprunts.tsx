@@ -532,18 +532,6 @@ const AdminEmpruntPage: React.FC = () => {
                         >
                             Retour au tableau de bord
                         </Button>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={handleNewEmprunt}
-                            sx={{
-                                borderRadius: '24px',
-                                px: 3,
-                                boxShadow: 2
-                            }}
-                        >
-                            Nouvel emprunt
-                        </Button>
                     </Box>
                 </Paper>
                 
@@ -745,6 +733,18 @@ const AdminEmpruntPage: React.FC = () => {
                         />
                         
                         <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleNewEmprunt}
+                                    sx={{
+                                        borderRadius: '24px',
+                                        px: 3,
+                                        boxShadow: 2
+                                    }}
+                                >
+                                    Nouvel emprunt
+                            </Button>
                             <FormControl size="small" sx={{ minWidth: 120, bgcolor: 'white', borderRadius: 1 }}>
                                 <InputLabel id="status-filter-label">Statut</InputLabel>
                                 <Select
