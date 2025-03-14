@@ -126,12 +126,3 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 |----|-------------|--------|------------------|--------|
 | THEME-01 | Changement de thème | 1. Accéder aux paramètres<br>2. Sélectionner un thème (clair/sombre)<br>3. Valider | Le thème de l'application change selon la sélection | À tester |
 | THEME-02 | Persistance des préférences | 1. Changer le thème<br>2. Se déconnecter<br>3. Se reconnecter | Le thème précédemment sélectionné est appliqué | À tester |
-
-## 4. Matrice de couverture des exigences
-
-| Fonctionnalité | Cas de tests | Couverture |
-|----------------|--------------|------------|
-| Authentification | AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05 | 100% |
-| Tableau de bord | DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06 | 100% |
-| Gestion des emprunts | EMP-01, EMP-02, EMP-03, EMP-04, EMP-05, EMP-06, EMP-07 | 100% |
-| Gestion des utilisateurs | USER-01, USER-02, USER-03, USER-04, USER-05, USER-
