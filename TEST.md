@@ -17,11 +17,12 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| AUTH-01 | Connexion avec identifiants valides | 1. Accéder à la page de connexion<br>2. Saisir un nom d'utilisateur valide<br>3. Saisir un mot de passe valide<br>4. Cliquer sur "Se connecter" | L'utilisateur est connecté et redirigé vers le tableau de bord | À tester |
-| AUTH-02 | Connexion avec identifiants invalides | 1. Accéder à la page de connexion<br>2. Saisir un nom d'utilisateur invalide<br>3. Saisir un mot de passe<br>4. Cliquer sur "Se connecter" | Un message d'erreur s'affiche | À tester |
-| AUTH-03 | Déconnexion | 1. Se connecter<br>2. Cliquer sur le bouton de déconnexion | L'utilisateur est déconnecté et redirigé vers la page de connexion | À tester |
-| AUTH-04 | Protection des routes | 1. Essayer d'accéder directement à une URL protégée sans être connecté | Redirection vers la page de connexion | À tester |
-| AUTH-05 | Confirmation de déconnexion | 1. Se connecter<br>2. Cliquer sur le bouton de déconnexion<br>3. Vérifier l'affichage de la boîte de dialogue<br>4. Cliquer sur "Annuler" | La boîte de dialogue se ferme et l'utilisateur reste connecté | À tester |
+| AUTH-01 | Connexion avec identifiants administrateur valides | 1. Accéder à la page de connexion<br>2. Saisir un nom d'utilisateur valide<br>3. Saisir un mot de passe valide<br>4. Cliquer sur "Se connecter" | L'utilisateur est connecté et redirigé vers le tableau de bord | À tester |
+| AUTH-02 | Connexion avec  non administrateur valide | 1. Accéder à la page de connexion<br>2. Saisir un nom d'utilisateur valide<br>3. Saisir un mot de passe<br>4. Cliquer sur "Se connecter" | Un message d'erreur s'affiche | À tester |
+| AUTH-03 | Connexion avec identifiants invalides | 1. Accéder à la page de connexion<br>2. Saisir un nom d'utilisateur invalide<br>3. Saisir un mot de passe<br>4. Cliquer sur "Se connecter" | Un message d'erreur s'affiche | À tester |
+| AUTH-04 | Déconnexion | 1. Se connecter<br>2. Cliquer sur le bouton de déconnexion | L'utilisateur est déconnecté et redirigé vers la page de connexion | À tester |
+| AUTH-05 | Protection des routes | 1. Essayer d'accéder directement à une URL protégée sans être connecté | Redirection vers la page de connexion | À tester |
+| AUTH-06 | Confirmation de déconnexion | 1. Se connecter<br>2. Cliquer sur le bouton de déconnexion<br>3. Vérifier l'affichage de la boîte de dialogue<br>4. Cliquer sur "Annuler" | La boîte de dialogue se ferme et l'utilisateur reste connecté | À tester |
 
 ### 3.2 Tableau de bord
 
@@ -45,6 +46,8 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | EMP-05 | Suppression d'un emprunt | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur l'icône de suppression d'un emprunt<br>3. Confirmer la suppression | L'emprunt est supprimé de la liste | À tester |
 | EMP-06 | Pagination des emprunts | 1. Accéder à la page "Emprunts"<br>2. Naviguer entre les différentes pages de résultats | La pagination fonctionne et affiche correctement les emprunts par page | À tester |
 | EMP-07 | Tri des emprunts | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur les en-têtes de colonnes | Les emprunts sont triés selon la colonne sélectionnée | À tester |
+| EMP-08 | Mise à jour des données d'en-tête | 1. Accéder à la page "Emprunts"<br>2. Ajouter un emprunt (EMP-03)<br>3. Vérifier que le total des emprunt a augmenté<br>4. Vérifier que le nombre d'emprunt actif augmente<br>5. Terminer l'emprunt<br>6. Vérifier que le nombre d'emprunt rendus augmente | Les données sont mise à jour | À tester |
+| EMP-09 | Retour au tableau de bord | 1. Accéder à la page "Emprunts"<br>2. Clique sur le bouton retour<br>3. Vérifier qu'on arrive bien sur la page principale| On reviens à la page principale | À tester |
 
 ### 3.4 Gestion des utilisateurs
 
