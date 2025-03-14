@@ -40,10 +40,10 @@ Il vous faudra en parallèle de cette installation avoir le backend Java qui est
 
 ```bash
 # Cloner le dépôt
-git clone https://scm.univ-tours.fr/22108349t/panneau-admin-passplat.git
+git clone https://github.com/meehdii18/passplat-admin.git
 
 # Accéder au répertoire
-cd panneau-admin-passplat
+cd passplat-admin
 
 # Installer les dépendances
 npm install
@@ -73,7 +73,7 @@ npm run test:watch
 ## 📦 Structure du Projet
 
 ```
-panneau-admin-passplat/
+passplat-admin/
 ├── src/
 │   ├── components/    # Composants réutilisables
 │   ├── contexts/      # Contextes React
