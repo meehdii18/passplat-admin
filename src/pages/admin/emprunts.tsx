@@ -22,16 +22,35 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem
+    MenuItem,
+    Chip,
+    Tooltip,
+    InputAdornment,
+    TablePagination,
+    Divider,
+    Grid,
+    Card,
+    Avatar,
+    Backdrop,
+    CircularProgress,
+    useMediaQuery
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
-import InputAdornment from '@mui/material/InputAdornment';
 import DoneIcon from '@mui/icons-material/Done';
-import { useTheme } from '@mui/material/styles';
+import SortIcon from '@mui/icons-material/Sort';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import PersonIcon from '@mui/icons-material/Person';
+import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -84,8 +103,15 @@ interface EmpruntFormData {
     IdCollecteur: number;
 }
 
+interface SortConfig {
+    key: string;
+    direction: 'asc' | 'desc';
+}
+
 const AdminEmpruntPage: React.FC = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [emprunts, setEmprunts] = useState<Emprunt[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedEmprunt, setSelectedEmprunt] = useState<Emprunt | null>(null);
@@ -100,7 +126,6 @@ const AdminEmpruntPage: React.FC = () => {
         dateRenduReel: null,
         IdCollecteur: 0
     });
-    const theme = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
     const [users, setUsers] = useState<Map<number, User>>(new Map());
     const [diffuseurs, setDiffuseurs] = useState<Map<number, DiffuseurCollecteur>>(new Map());
@@ -109,9 +134,22 @@ const AdminEmpruntPage: React.FC = () => {
     const [terminateDialogOpen, setTerminateDialogOpen] = useState(false);
     const [empruntToTerminate, setEmpruntToTerminate] = useState<Emprunt | null>(null);
     const [collecteurs, setCollecteurs] = useState<Map<number, DiffuseurCollecteur>>(new Map());
+    const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'dateEmprunt', direction: 'desc' });
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'returned'>('all');
 
     useEffect(() => {
-        Promise.all([fetchEmprunts(), fetchData()]);
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                await Promise.all([fetchEmprunts(), fetchData()]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
     }, []);
 
     const fetchEmprunts = async () => {
@@ -144,8 +182,11 @@ const AdminEmpruntPage: React.FC = () => {
             showSnackbar('Erreur lors de la récupération des données', 'error');
         }
     };
+    
     const getCollecteurs = () => {
-        const collecteursArray = Array.from(collecteurs.values());
+        const collecteursArray = Array.from(collecteurs.values()).filter(
+            collecteur => collecteur.account.role === 4 || collecteur.account.role === 5
+        );
         
         collecteursArray.sort((a, b) => a.nom.localeCompare(b.nom));
         
@@ -259,12 +300,37 @@ const AdminEmpruntPage: React.FC = () => {
         }
     };
 
-    const filteredEmprunts = emprunts.filter((emprunt) => {
-        const searchLower = searchQuery.toLowerCase();
-        const fullName = `${emprunt?.user?.prenom} ${emprunt?.user?.nom}`.toLowerCase();
+    const getFilteredEmprunts = () => {
+        let filtered = [...emprunts];
         
-        return fullName.includes(searchLower);
-    });
+        // Filtre par statut
+        if (statusFilter === 'active') {
+            filtered = filtered.filter(emprunt => !emprunt.dateRenduReel);
+        } else if (statusFilter === 'returned') {
+            filtered = filtered.filter(emprunt => emprunt.dateRenduReel);
+        }
+        
+        // Filtre de recherche
+        if (searchQuery) {
+            const searchLower = searchQuery.toLowerCase();
+            filtered = filtered.filter(emprunt => {
+                const fullName = `${emprunt?.user?.prenom} ${emprunt?.user?.nom}`.toLowerCase();
+                
+                return (
+                    fullName.includes(searchLower) ||
+                    (emprunt.collecteur?.nom?.toLowerCase() || '').includes(searchLower) ||
+                    (emprunt.diffuseur?.nom?.toLowerCase() || '').includes(searchLower) ||
+                    (emprunt.contenant?.nom?.toLowerCase() || '').includes(searchLower) ||
+                    (new Date(emprunt.dateEmprunt).toLocaleDateString('fr-FR')).toLowerCase().includes(searchLower) ||
+                    (new Date(emprunt.dateRenduPrevu).toLocaleDateString('fr-FR')).toLowerCase().includes(searchLower) ||
+                    (emprunt.dateRenduReel && new Date(emprunt.dateRenduReel).toLocaleDateString('fr-FR').toLowerCase().includes(searchLower)) ||
+                    (emprunt.quantite.toString()).includes(searchLower) 
+                );
+            });
+        }
+        
+        return filtered;
+    };
 
     const handleTerminate = (emprunt: Emprunt) => {
         setEmpruntToTerminate(emprunt);
@@ -300,353 +366,1092 @@ const AdminEmpruntPage: React.FC = () => {
             setEmpruntToTerminate(null);
         }
     };
+    
+    const sortData = (data: Emprunt[]) => {
+        if (!sortConfig.key) return data;
+    
+        return [...data].sort((a, b) => {
+            let aValue: any;
+            let bValue: any;
+    
+            switch (sortConfig.key) {
+                case 'id':
+                    aValue = a.id;
+                    bValue = b.id;
+                    break;
+                case 'user':
+                    aValue = `${a.user?.prenom} ${a.user?.nom}`;
+                    bValue = `${b.user?.prenom} ${b.user?.nom}`;
+                    break;
+                case 'contenant':
+                    aValue = a.contenant?.nom;
+                    bValue = b.contenant?.nom;
+                    break;
+                case 'diffuseur':
+                    aValue = a.diffuseur?.nom;
+                    bValue = b.diffuseur?.nom;
+                    break;
+                case 'dateEmprunt':
+                    aValue = new Date(a.dateEmprunt).getTime();
+                    bValue = new Date(b.dateEmprunt).getTime();
+                    break;
+                case 'quantite':
+                    aValue = a.quantite;
+                    bValue = b.quantite;
+                    break;
+                case 'dateRenduPrevu':
+                    aValue = new Date(a.dateRenduPrevu).getTime();
+                    bValue = new Date(b.dateRenduPrevu).getTime();
+                    break;
+                case 'dateRenduReel':
+                    aValue = a.dateRenduReel ? new Date(a.dateRenduReel).getTime() : null;
+                    bValue = b.dateRenduReel ? new Date(b.dateRenduReel).getTime() : null;
+                    break;
+                case 'collecteur':
+                    aValue = a.collecteur?.nom;
+                    bValue = b.collecteur?.nom;
+                    break;
+                default:
+                    return 0;
+                }
+        
+                if (aValue === null) return 1;
+                if (bValue === null) return -1;
+                
+                const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                return sortConfig.direction === 'asc' ? comparison : -comparison;
+            });
+        };
+
+    const handleSort = (key: string) => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+    
+    const handleChangePage = (_: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+    
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    // Tri et pagination
+    const filteredEmprunts = getFilteredEmprunts();
+    const sortedEmprunts = sortData(filteredEmprunts);
+    const paginatedEmprunts = sortedEmprunts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+    // Pour déterminer si la date prévue est dépassée
+    const isOverdue = (datePrevu: string) => {
+        const now = new Date();
+        const datePrevuObj = new Date(datePrevu);
+        return !datePrevu ? false : datePrevuObj < now;
+    };
+
+    // Statistiques des emprunts
+    const totalEmprunts = filteredEmprunts.length;
+    const activeEmprunts = filteredEmprunts.filter(e => !e.dateRenduReel).length;
+    const returnedEmprunts = filteredEmprunts.filter(e => e.dateRenduReel).length;
+    const overdueEmprunts = filteredEmprunts.filter(e => !e.dateRenduReel && isOverdue(e.dateRenduPrevu)).length;
+
+    // Formatage des dates
+    const formatDate = (dateStr: string | null) => {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('fr-FR', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric'
+        });
+    };
+
+    const getContenantColor = (type: string) => {
+        switch(type) {
+            case 'S': return theme.palette.info.main;
+            case 'M': return theme.palette.warning.main;
+            case 'XL': return theme.palette.error.main;
+            default: return theme.palette.primary.main;
+        }
+    };
 
     return (
-        <Container>
-        <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mb: 3
-        }}>
-            <Button
-            variant="outlined"
-            onClick={handleBack}
-            startIcon={<ArrowBackIcon />}
-            >
-            Retour
-            </Button>
-            <Typography variant="h4" sx={{ color: theme.palette.primary.main, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-            Gestion des Emprunts
-            </Typography>
-
-        </Box>
-            
-
-            
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <TextField
-                    size="small"
-                    variant="outlined"
-                    placeholder="Rechercher un emprunt..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    sx={{ width: '300px' }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleNewEmprunt}
-                >
-                    Nouvel emprunt
-                </Button>
-            </Box>
-
-            <TableContainer 
-            component={Paper}
+        <Box 
             sx={{ 
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 5,
-                '& .MuiTableCell-root': {
-                    borderRight: 1,
-                    borderColor: 'divider',
-                    '&:last-child': {
-                        borderRight: 0
-                    }
-                },
-                '& .MuiTableHead-root': {
-                    '& .MuiTableCell-root': {
-                        backgroundColor: theme.palette.primary.main,
-                        fontWeight: 'bold'
-                    }
-                }
-            }}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Utilisateur</TableCell>
-                            <TableCell>Contenant</TableCell>
-                            <TableCell>Diffuseur</TableCell>
-                            <TableCell>Date d'emprunt</TableCell>
-                            <TableCell>Quantité</TableCell>
-                            <TableCell>Date prévue</TableCell>
-                            <TableCell>Date rendu</TableCell>
-                            <TableCell>Collecteur</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredEmprunts.map((emprunt) => (
-                            <TableRow key={emprunt?.id || 'undefined'}>
-                                <TableCell>{emprunt?.id || '-'}</TableCell>
-                                <TableCell>
-                                    {emprunt?.user ? `${emprunt.user.prenom} ${emprunt.user.nom}` : '-'}
-                                </TableCell>
-                                <TableCell>{emprunt?.contenant?.nom || '-'}</TableCell>
-                                <TableCell>{emprunt?.diffuseur?.nom || '-'}</TableCell>
-                                <TableCell>
-                                    {emprunt?.dateEmprunt ? 
-                                        new Date(emprunt.dateEmprunt).toLocaleDateString('fr-FR') : 
-                                        '-'}
-                                </TableCell>
-                                <TableCell>{emprunt?.quantite || '-'}</TableCell>
-                                <TableCell>
-                                    {emprunt?.dateRenduPrevu ? 
-                                        new Date(emprunt.dateRenduPrevu).toLocaleDateString('fr-FR') : 
-                                        '-'}
-                                </TableCell>
-                                <TableCell>
-                                    {emprunt?.dateRenduReel ? 
-                                        new Date(emprunt.dateRenduReel).toLocaleDateString('fr-FR') : 
-                                        '-'}
-                                </TableCell>
-                                <TableCell>
-                                    {emprunt?.collecteur && 
-                                    (emprunt.collecteur.account.role === 4 || emprunt.collecteur.account.role === 5) 
-                                        ? emprunt.collecteur.nom 
-                                        : '-'}
-                                </TableCell>
-                                <TableCell>
-                                <IconButton 
-                                    color="primary" 
-                                    onClick={() => emprunt && handleEdit(emprunt)}
-                                    disabled={!emprunt}
+                minHeight: '100vh',
+                bgcolor: alpha(theme.palette.primary.main, 0.03),
+                py: 4
+            }}
+        >
+            <Backdrop
+                sx={{ color: '#fff', zIndex: theme.zIndex.drawer + 1 }}
+                open={loading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+
+            <Container>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 3,
+                        mb: 4,
+                        borderRadius: 2,
+                        backgroundColor: 'white',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                >
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        gap: isMobile ? 2 : 0
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography 
+                                variant="h4" 
+                                sx={{ 
+                                    color: theme.palette.primary.main, 
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Gestion des Emprunts
+                            </Typography>
+                        </Box>
+                        <Button
+                            variant="outlined"
+                            onClick={handleBack}
+                            startIcon={<ArrowBackIcon />}
+                            sx={{
+                                borderRadius: '24px',
+                                px: 2
+                            }}
+                        >
+                            Retour au tableau de bord
+                        </Button>
+                    </Box>
+                </Paper>
+                
+                <Grid container spacing={0} sx={{ mb: 4, ml: 5 }}>
+                    <Grid xs={12} sm={6} md={3}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                borderRadius: 2,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                height: '100%',
+                                width: '70%'
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    p: 2
+                                }}
+                            >
+                                <Avatar
+                                    sx={{ 
+                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                        color: theme.palette.primary.main,
+                                        mr: 2
+                                    }}
                                 >
-                                    <EditIcon />
-                                </IconButton>
-                                {emprunt && !emprunt.dateRenduReel && (
+                                    <InventoryIcon />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        {totalEmprunts}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Total des emprunts
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Card>
+                    </Grid>
+                    <Grid xs={12} sm={6} md={3}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                borderRadius: 2,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                width: '70%'
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    p: 2
+                                }}
+                            >
+                                <Avatar
+                                    sx={{ 
+                                        bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                        color: theme.palette.warning.main,
+                                        mr: 2
+                                    }}
+                                >
+                                    <ScheduleIcon />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        {activeEmprunts}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Emprunts actifs
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Card>
+                    </Grid>
+                    <Grid xs={12} sm={6} md={3}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                borderRadius: 2,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                width: '70%'
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    p: 2
+                                }}
+                            >
+                                <Avatar
+                                    sx={{ 
+                                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                                        color: theme.palette.success.main,
+                                        mr: 2
+                                    }}
+                                >
+                                    <DoneIcon />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        {returnedEmprunts}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Emprunts rendus
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Card>
+                    </Grid>
+                    <Grid xs={12} sm={6} md={3}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                borderRadius: 2,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                width: '70%'
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    p: 2
+                                }}
+                            >
+                                <Avatar
+                                    sx={{ 
+                                        bgcolor: alpha(theme.palette.error.main, 0.1),
+                                        color: theme.palette.error.main,
+                                        mr: 2
+                                    }}
+                                >
+                                    <HistoryIcon />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        {overdueEmprunts}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Emprunts en retard
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Card>
+                    </Grid>
+                </Grid>
+                
+                <Paper 
+                    elevation={0}
+                    sx={{
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        mb: 4,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                >
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        gap: 2,
+                        p: 2,
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                    }}>
+                        <TextField
+                            size="small"
+                            variant="outlined"
+                            placeholder="Rechercher..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            sx={{ 
+                                minWidth: '240px',
+                                bgcolor: 'white',
+                                borderRadius: 1,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: searchQuery ? (
+                                    <InputAdornment position="end">
+                                        <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ) : null
+                            }}
+                        />
+                        
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleNewEmprunt}
+                                    sx={{
+                                        borderRadius: '24px',
+                                        px: 3,
+                                        boxShadow: 2
+                                    }}
+                                >
+                                    Nouvel emprunt
+                            </Button>
+                            <FormControl size="small" sx={{ minWidth: 120, bgcolor: 'white', borderRadius: 1 }}>
+                                <InputLabel id="status-filter-label">Statut</InputLabel>
+                                <Select
+                                    labelId="status-filter-label"
+                                    value={statusFilter}
+                                    label="Statut"
+                                    onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'returned')}
+                                    startAdornment={
+                                        <FilterListIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                    }
+                                >
+                                    <MenuItem value="all">Tous</MenuItem>
+                                    <MenuItem value="active">En cours</MenuItem>
+                                    <MenuItem value="returned">Rendus</MenuItem>
+                                </Select>
+                            </FormControl>
+                            
+                            <FormControl size="small" sx={{ minWidth: 120, bgcolor: 'white', borderRadius: 1 }}>
+                                <InputLabel id="sort-by-label">Trier par</InputLabel>
+                                <Select
+                                    labelId="sort-by-label"
+                                    value={sortConfig.key}
+                                    label="Trier par"
+                                    onChange={(e) => handleSort(e.target.value)}
+                                    startAdornment={
+                                        <SortIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                    }
+                                    endAdornment={
+                                        <Box component="span" sx={{ ml: 0.5, color: theme.palette.text.secondary }}>
+                                            {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                        </Box>
+                                    }
+                                >
+                                    <MenuItem value="dateEmprunt">Date d'emprunt</MenuItem>
+                                    <MenuItem value="dateRenduPrevu">Date prévue</MenuItem>
+                                    <MenuItem value="user">Utilisateur</MenuItem>
+                                    <MenuItem value="diffuseur">Diffuseur</MenuItem>
+                                    <MenuItem value="contenant">Contenant                                    </MenuItem>
+                                    <MenuItem value="quantite">Quantité</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Box>
+                    </Box>
+
+                    <TableContainer>
+                        <Table sx={{ minWidth: 650 }}>
+                            <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <PersonIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Utilisateur
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <InventoryIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Contenant
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <StorefrontIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Diffuseur
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <CalendarTodayIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Date emprunt
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Qté</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <ScheduleIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Date prévue
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <DoneIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Date rendu
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <LocalShippingIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                            Collecteur
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {paginatedEmprunts.length > 0 ? (
+                                    paginatedEmprunts.map((emprunt) => (
+                                        <TableRow 
+                                            key={emprunt.id}
+                                            hover
+                                            sx={{ 
+                                                '&:last-child td, &:last-child th': { border: 0 },
+                                                bgcolor: emprunt.dateRenduReel ? 
+                                                    'transparent' : 
+                                                    (isOverdue(emprunt.dateRenduPrevu) ? 
+                                                        alpha(theme.palette.error.main, 0.05) : 
+                                                        'transparent')
+                                            }}
+                                        >
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                    <Avatar 
+                                                        sx={{ 
+                                                            width: 32, 
+                                                            height: 32, 
+                                                            bgcolor: theme.palette.primary.main,
+                                                            fontSize: '0.9rem',
+                                                            mr: 1
+                                                        }}
+                                                    >
+                                                        {emprunt.user?.prenom?.charAt(0)}{emprunt.user?.nom?.charAt(0)}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="body2" fontWeight="medium">
+                                                            {emprunt.user?.prenom} {emprunt.user?.nom}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            ID: {emprunt.user?.id}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip 
+                                                    label={emprunt.contenant?.nom} 
+                                                    size="small" 
+                                                    sx={{ 
+                                                        bgcolor: alpha(getContenantColor(emprunt.contenant?.nom.split(' ')[1]), 0.1),
+                                                        color: getContenantColor(emprunt.contenant?.nom.split(' ')[1]),
+                                                        fontWeight: 'medium'
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Tooltip title={`ID: ${emprunt.diffuseur?.id}`}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        <StorefrontIcon 
+                                                            fontSize="small" 
+                                                            sx={{ 
+                                                                mr: 0.5, 
+                                                                color: theme.palette.text.secondary,
+                                                                fontSize: 16
+                                                            }} 
+                                                        />
+                                                        <Typography variant="body2">
+                                                            {emprunt.diffuseur?.nom}
+                                                        </Typography>
+                                                    </Box>
+                                                </Tooltip>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2">
+                                                    {formatDate(emprunt.dateEmprunt)}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Chip 
+                                                    label={emprunt.quantite} 
+                                                    size="small" 
+                                                    sx={{ 
+                                                        minWidth: 36,
+                                                        bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                                                        color: theme.palette.secondary.main,
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box sx={{ 
+                                                    display: 'flex',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <Typography 
+                                                        variant="body2"
+                                                        sx={{ 
+                                                            color: !emprunt.dateRenduReel && isOverdue(emprunt.dateRenduPrevu) 
+                                                                ? theme.palette.error.main 
+                                                                : 'inherit'
+                                                        }}
+                                                    >
+                                                        {formatDate(emprunt.dateRenduPrevu)}
+                                                    </Typography>
+                                                    {!emprunt.dateRenduReel && isOverdue(emprunt.dateRenduPrevu) && (
+                                                        <Tooltip title="En retard">
+                                                            <HistoryIcon 
+                                                                color="error" 
+                                                                sx={{ ml: 0.5, fontSize: 18 }} 
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                {emprunt.dateRenduReel ? (
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        <DoneIcon 
+                                                            color="success" 
+                                                            fontSize="small" 
+                                                            sx={{ mr: 0.5 }} 
+                                                        />
+                                                        <Typography variant="body2">
+                                                            {formatDate(emprunt.dateRenduReel)}
+                                                        </Typography>
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        -
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {emprunt.collecteur ? (
+                                                    <Tooltip title={`ID: ${emprunt.collecteur?.id}`}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <LocalShippingIcon 
+                                                                fontSize="small" 
+                                                                sx={{ 
+                                                                    mr: 0.5, 
+                                                                    color: theme.palette.text.secondary,
+                                                                    fontSize: 16
+                                                                }} 
+                                                            />
+                                                            <Typography variant="body2">
+                                                                {emprunt.collecteur?.nom}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        -
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                                    <Tooltip title="Modifier">
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={() => handleEdit(emprunt)}
+                                                            sx={{ 
+                                                                color: theme.palette.primary.main,
+                                                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                                                '&:hover': {
+                                                                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                                                }
+                                                            }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    
+                                                    {!emprunt.dateRenduReel && (
+                                                        <>
+                                                            <Tooltip title="Prolonger">
+                                                                <IconButton 
+                                                                    size="small" 
+                                                                    onClick={() => handleProlongClick(emprunt.id)}
+                                                                    sx={{ 
+                                                                        color: theme.palette.info.main,
+                                                                        bgcolor: alpha(theme.palette.info.main, 0.1),
+                                                                        '&:hover': {
+                                                                            bgcolor: alpha(theme.palette.info.main, 0.2),
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <ScheduleIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Terminer l'emprunt">
+                                                                <IconButton 
+                                                                    size="small" 
+                                                                    onClick={() => handleTerminate(emprunt)}
+                                                                    sx={{ 
+                                                                        color: theme.palette.success.main,
+                                                                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                                                                        '&:hover': {
+                                                                            bgcolor: alpha(theme.palette.success.main, 0.2),
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <DoneIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </>
+                                                    )}
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                                            <Typography variant="body1" color="text.secondary">
+                                                {emprunts.length === 0 ? 
+                                                    'Aucun emprunt enregistré' : 
+                                                    'Aucun résultat correspondant à votre recherche'
+                                                }
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    
+                    <TablePagination
+                        rowsPerPageOptions={[5, 10, 25, 50]}
+                        component="div"
+                        count={filteredEmprunts.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        labelRowsPerPage="Lignes par page:"
+                        labelDisplayedRows={({ from, to, count }) => 
+                            `${from}-${to} sur ${count !== -1 ? count : `plus de ${to}`}`
+                        }
+                    />
+                </Paper>
+                
+                {/* Dialogue de création/édition d'emprunt */}
+                <Dialog 
+                    open={openDialog} 
+                    onClose={() => setOpenDialog(false)}
+                    fullWidth
+                    maxWidth="md"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{ 
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        pb: 1
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {selectedEmprunt ? (
+                                <EditIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                            ) : (
+                                <AddIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                            )}
+                            <Typography variant="h6" fontWeight="bold">
+                                {selectedEmprunt ? 'Modifier l\'emprunt' : 'Nouvel emprunt'}
+                            </Typography>
+                        </Box>
+                    </DialogTitle>
+                    <Divider />
+                    <DialogContent sx={{ pt: 3 }}>
+                        <form onSubmit={handleSubmit}>
+                            <Grid container spacing={2}>
+                                <Grid xs={12} md={6}>
+                                    <FormControl fullWidth margin="dense">
+                                        <InputLabel id="user-label">Utilisateur</InputLabel>
+                                        <Select
+                                            labelId="user-label"
+                                            value={formData.IdUser}
+                                            onChange={(e) => setFormData({...formData, IdUser: Number(e.target.value)})}
+                                            required
+                                            label="Utilisateur"
+                                            startAdornment={
+                                                <PersonIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                            }
+                                        >
+                                            {Array.from(users.values())
+                                                .filter(user => !user.estSupprime)
+                                                .sort((a, b) => a.nom.localeCompare(b.nom))
+                                                .map(user => (
+                                                    <MenuItem key={user.id} value={user.id}>
+                                                        {user.prenom} {user.nom}
+                                                    </MenuItem>
+                                                ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <FormControl fullWidth margin="dense">
+                                        <InputLabel id="contenant-label">Contenant</InputLabel>
+                                        <Select
+                                            labelId="contenant-label"
+                                            value={formData.IdContenant}
+                                            onChange={(e) => setFormData({...formData, IdContenant: Number(e.target.value)})}
+                                            required
+                                            label="Contenant"
+                                            startAdornment={
+                                                <InventoryIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                            }
+                                        >
+                                            {emprunts.reduce((containers, emprunt) => {
+                                                if (emprunt.contenant && !containers.some(c => c.id === emprunt.contenant.id)) {
+                                                    containers.push(emprunt.contenant);
+                                                }
+                                                return containers;
+                                            }, [] as Contenant[])
+                                                .sort((a, b) => a.nom.localeCompare(b.nom))
+                                                .map(contenant => (
+                                                    <MenuItem key={contenant.id} value={contenant.id}>
+                                                        {contenant.nom}
+                                                    </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <FormControl fullWidth margin="dense">
+                                        <InputLabel id="diffuseur-label">Diffuseur</InputLabel>
+                                        <Select
+                                            labelId="diffuseur-label"
+                                            value={formData.IdDiffuseur}
+                                            onChange={(e) => setFormData({...formData, IdDiffuseur: Number(e.target.value)})}
+                                            required
+                                            label="Diffuseur"
+                                            startAdornment={
+                                                <StorefrontIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                            }
+                                        >
+                                            {Array.from(diffuseurs.values())
+                                                .sort((a, b) => a.nom.localeCompare(b.nom))
+                                                .map(diffuseur => (
+                                                    <MenuItem key={diffuseur.id} value={diffuseur.id}>
+                                                        {diffuseur.nom}
+                                                    </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        margin="dense"
+                                        label="Quantité"
+                                        type="number"
+                                        value={formData.quantite}
+                                        onChange={(e) => setFormData({...formData, quantite: parseInt(e.target.value, 10)})}
+                                        required
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <InventoryIcon sx={{ color: theme.palette.text.secondary }} />
+                                                </InputAdornment>
+                                            ),
+                                            inputProps: { min: 1 }
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        margin="dense"
+                                        label="Date d'emprunt"
+                                        type="date"
+                                        value={formData.dateEmprunt}
+                                        onChange={(e) => setFormData({...formData, dateEmprunt: e.target.value})}
+                                        required
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <CalendarTodayIcon sx={{ color: theme.palette.text.secondary }} />
+                                                </InputAdornment>
+                                            )
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        margin="dense"
+                                        label="Date de rendu prévu"
+                                        type="date"
+                                        value={formData.dateRenduPrevu}
+                                        onChange={(e) => setFormData({...formData, dateRenduPrevu: e.target.value})}
+                                        required
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <ScheduleIcon sx={{ color: theme.palette.text.secondary }} />
+                                                </InputAdornment>
+                                            )
+                                        }}
+                                    />
+                                </Grid>
+                                {selectedEmprunt && (
                                     <>
-                                        <IconButton
-                                            color="secondary"
-                                            onClick={() => handleProlongClick(emprunt.id)}
-                                            title="Prolonger l'emprunt"
-                                        >
-                                            <HistoryIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            color="success"
-                                            onClick={() => handleTerminate(emprunt)}
-                                            title="Terminer l'emprunt"
-                                        >
-                                            <DoneIcon />
-                                        </IconButton>
+                                        <Grid xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                margin="dense"
+                                                label="Date de rendu réel"
+                                                type="date"
+                                                value={formData.dateRenduReel || ''}
+                                                onChange={(e) => setFormData({...formData, dateRenduReel: e.target.value || null})}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <DoneIcon sx={{ color: theme.palette.text.secondary }} />
+                                                        </InputAdornment>
+                                                    )
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid xs={12} md={6}>
+                                            <FormControl fullWidth margin="dense">
+                                                <InputLabel id="collecteur-label">Collecteur</InputLabel>
+                                                <Select
+                                                    labelId="collecteur-label"
+                                                    value={formData.IdCollecteur}
+                                                    onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
+                                                    label="Collecteur"
+                                                    startAdornment={
+                                                        <LocalShippingIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                                    }
+                                                >
+                                                    <MenuItem value={0}>Aucun</MenuItem>
+                                                    {getCollecteurs().map(collecteur => (
+                                                        <MenuItem key={collecteur.id} value={collecteur.id}>
+                                                            {collecteur.nom}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
                                     </>
                                 )}
-                            </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                            </Grid>
+                        </form>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                        <Button 
+                            onClick={() => setOpenDialog(false)}
+                            variant="outlined"
+                            startIcon={<CloseIcon />}
+                        >
+                            Annuler
+                        </Button>
+                        <Button 
+                            onClick={handleSubmit}
+                            variant="contained"
+                            startIcon={selectedEmprunt ? <EditIcon /> : <AddIcon />}
+                            color="primary"
+                        >
+                            {selectedEmprunt ? 'Enregistrer' : 'Créer'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-                <form onSubmit={handleSubmit}>
-                    <DialogTitle>
-                        {selectedEmprunt ? 'Modifier emprunt' : 'Nouvel emprunt'}
+                {/* Dialogue de prolongation */}
+                <Dialog 
+                    open={prolongDialogOpen} 
+                    onClose={() => setProlongDialogOpen(false)}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{ bgcolor: alpha(theme.palette.info.main, 0.05) }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <ScheduleIcon sx={{ mr: 1, color: theme.palette.info.main }} />
+                            <Typography variant="h6" fontWeight="medium">
+                                Prolonger l'emprunt
+                            </Typography>
+                        </Box>
                     </DialogTitle>
-                    <DialogContent>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Utilisateur</InputLabel>
+                    <DialogContent sx={{ pt: 3, pb: 1 }}>
+                        <Typography variant="body1">
+                            Êtes-vous sûr de vouloir prolonger cet emprunt de 14 jours supplémentaires ?
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button 
+                            onClick={() => setProlongDialogOpen(false)}
+                            variant="outlined"
+                        >
+                            Annuler
+                        </Button>
+                        <Button 
+                            onClick={handleProlongConfirm}
+                            variant="contained"
+                            color="info"
+                            startIcon={<ScheduleIcon />}
+                        >
+                            Prolonger
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Dialogue de terminaison */}
+                <Dialog 
+                    open={terminateDialogOpen} 
+                    onClose={() => setTerminateDialogOpen(false)}
+                    fullWidth
+                    maxWidth="sm"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{ bgcolor: alpha(theme.palette.success.main, 0.05) }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <DoneIcon sx={{ mr: 1, color: theme.palette.success.main }} />
+                            <Typography variant="h6" fontWeight="medium">
+                                Terminer l'emprunt
+                            </Typography>
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ pt: 3 }}>
+                        <Typography variant="body1" sx={{ mb: 3 }}>
+                            Vous êtes sur le point de terminer l'emprunt suivant:
+                        </Typography>
+                        
+                        {empruntToTerminate && (
+                            <Box sx={{ 
+                                mb: 3,
+                                p: 2,
+                                bgcolor: alpha(theme.palette.primary.main, 0.05),
+                                borderRadius: 1,
+                                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                            }}>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Utilisateur:</b> {empruntToTerminate.user?.prenom} {empruntToTerminate.user?.nom}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Contenant:</b> {empruntToTerminate.contenant?.nom}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Quantité:</b> {empruntToTerminate.quantite}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <b>Diffuseur:</b> {empruntToTerminate.diffuseur?.nom}
+                                </Typography>
+                            </Box>
+                        )}
+                        
+                        <FormControl fullWidth margin="dense" required>
+                            <InputLabel id="collecteur-term-label">Collecteur</InputLabel>
                             <Select
-                                value={formData.IdUser}
-                                onChange={(e) => setFormData({...formData, IdUser: Number(e.target.value)})}
-                                required
-                            >
-                                {Array.from(users.values()).map((user) => (
-                                    <MenuItem key={user.id} value={user.id}>
-                                        {`${user.prenom} ${user.nom}`}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Contenant</InputLabel>
-                            <Select
-                                value={formData.IdContenant}
-                                onChange={(e) => setFormData({...formData, IdContenant: Number(e.target.value)})}
-                                required
-                            >
-                                <MenuItem value={1}>XL</MenuItem>
-                                <MenuItem value={2}>M</MenuItem>
-                                <MenuItem value={3}>S</MenuItem>
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Diffuseur</InputLabel>
-                            <Select
-                                value={formData.IdDiffuseur}
-                                onChange={(e) => setFormData({...formData, IdDiffuseur: Number(e.target.value)})}
-                                required
-                            >
-                                {Array.from(diffuseurs.values()).map((diffuseur) => (
-                                    <MenuItem key={diffuseur.id} value={diffuseur.id}>
-                                        {diffuseur.nom}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <TextField
-                            fullWidth
-                            label="Date d'emprunt"
-                            type="date"
-                            value={formData.dateEmprunt}
-                            onChange={(e) => setFormData({...formData, dateEmprunt: e.target.value})}
-                            margin="normal"
-                            required
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Quantité"
-                            type="number"
-                            value={formData.quantite}
-                            onChange={(e) => setFormData({...formData, quantite: Number(e.target.value)})}
-                            margin="normal"
-                            required
-                            inputProps={{ min: 1 }}
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Date prévue de rendu"
-                            type="date"
-                            value={formData.dateRenduPrevu}
-                            onChange={(e) => setFormData({...formData, dateRenduPrevu: e.target.value})}
-                            margin="normal"
-                            required
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                        />
-
-                        {selectedEmprunt && (
-                            <>
-                                <TextField
-                                    fullWidth
-                                    label="Date de rendu réel"
-                                    type="date"
-                                    value={formData.dateRenduReel || ''}
-                                    onChange={(e) => setFormData({...formData, dateRenduReel: e.target.value})}
-                                    margin="normal"
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                />
-
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Collecteur</InputLabel>
-                            <Select
+                                labelId="collecteur-term-label"
                                 value={formData.IdCollecteur}
                                 onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
+                                label="Collecteur"
+                                startAdornment={
+                                    <LocalShippingIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                }
                             >
-                                <MenuItem value={0}>-</MenuItem>
-                                {getCollecteurs().map((collecteur) => (
+                                {getCollecteurs().map(collecteur => (
                                     <MenuItem key={collecteur.id} value={collecteur.id}>
                                         {collecteur.nom}
                                     </MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
-                            </>
-                        )}
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
-                        <Button type="submit" variant="contained">Sauvegarder</Button>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button 
+                            onClick={() => setTerminateDialogOpen(false)}
+                            variant="outlined"
+                        >
+                            Annuler
+                        </Button>
+                        <Button 
+                            onClick={handleTerminateConfirm}
+                            variant="contained"
+                            color="success"
+                            startIcon={<DoneIcon />}
+                            disabled={!formData.IdCollecteur}
+                        >
+                            Confirmer le retour
+                        </Button>
                     </DialogActions>
-                </form>
-            </Dialog>
+                </Dialog>
 
-            <Dialog
-                open={prolongDialogOpen}
-                onClose={() => setProlongDialogOpen(false)}
-            >
-                <DialogTitle>Confirmation de prolongation</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Voulez vous prolonger l'emprunt d'une semaine ?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setProlongDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={handleProlongConfirm} variant="contained" color="primary">
-                        Confirmer
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            <Dialog
-                open={terminateDialogOpen}
-                onClose={() => setTerminateDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>Terminer l'emprunt</DialogTitle>
-                <DialogContent>
-                    <Typography gutterBottom>
-                        Voulez-vous terminer cet emprunt ?
-                    </Typography>
-                    {empruntToTerminate && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Utilisateur: {empruntToTerminate.user.prenom} {empruntToTerminate.user.nom}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Contenant: {empruntToTerminate.contenant.nom}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Quantité: {empruntToTerminate.quantite}
-                            </Typography>
-                        </Box>
-                    )}
-                <FormControl fullWidth margin="normal">
-                    <InputLabel>Collecteur</InputLabel>
-                    <Select
-                        value={formData.IdCollecteur}
-                        onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
+                {/* Snackbar de notification */}
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={6000}
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                >
+                    <Alert 
+                        onClose={() => setSnackbar({ ...snackbar, open: false })} 
+                        severity={snackbar.severity}
+                        variant="filled"
+                        sx={{ 
+                            width: '100%',
+                            boxShadow: 3,
+                            borderRadius: 2
+                        }}
                     >
-                        <MenuItem value={0}>-</MenuItem>
-                        {getCollecteurs().map((collecteur) => (
-                            <MenuItem key={collecteur.id} value={collecteur.id}>
-                                {collecteur.nom}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setTerminateDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={handleTerminateConfirm} variant="contained" color="success">
-                        Terminer l'emprunt
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </Container>
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </Container>
+        </Box>
     );
 };
 
