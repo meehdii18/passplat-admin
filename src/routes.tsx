@@ -4,6 +4,7 @@ import AdminUserPage from './pages/admin/user';
 import AdminEmpruntPage from './pages/admin/emprunts';
 import Connexion from './pages/connexion/Connexion';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminStockPage from './pages/admin/stock';
 
 const AppRoutes = () => (
     <Routes>
@@ -22,6 +23,14 @@ const AppRoutes = () => (
             element={
                 <ProtectedRoute>
                     <AdminEmpruntPage />
+                </ProtectedRoute>
+            } 
+        />
+                <Route 
+            path="/admin/stock" 
+            element={
+                <ProtectedRoute>
+                    <AdminStockPage />
                 </ProtectedRoute>
             } 
         />
