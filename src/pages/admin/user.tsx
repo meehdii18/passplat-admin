@@ -38,13 +38,11 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import EmailIcon from '@mui/icons-material/Email';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import PasswordIcon from '@mui/icons-material/Password';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import PersonIcon from '@mui/icons-material/Person';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -163,7 +161,6 @@ const AdminUserPage: React.FC = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'nom', direction: 'asc' });
     const [selectedEmails, setSelectedEmails] = useState<number[]>([]);
     const [contactDialogOpen, setContactDialogOpen] = useState(false);

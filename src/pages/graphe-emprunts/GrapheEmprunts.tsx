@@ -34,13 +34,11 @@ import DownloadIcon from '@mui/icons-material/Download';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import DateRangeIcon from '@mui/icons-material/DateRange';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { alpha } from '@mui/material/styles';
 import theme from "../../theme.ts";
 import 'chartjs-adapter-date-fns';
 import { fr } from 'date-fns/locale';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 

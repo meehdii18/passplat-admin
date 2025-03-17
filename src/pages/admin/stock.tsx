@@ -40,9 +40,7 @@ import Grid from '@mui/material/Grid2';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -96,7 +94,6 @@ const AdminStockPage: React.FC = () => {
     const [contenants, setContenants] = useState<Contenant[]>([]);
     const [loading, setLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
-    const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
     const [selectedDiffuseur, setSelectedDiffuseur] = useState<Diffuseur | null>(null);
     const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({
         open: false,
