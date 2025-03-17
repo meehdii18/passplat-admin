@@ -308,6 +308,7 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                         label="Date de début"
                                         value={dateDebut}
                                         format="DD/MM/YYYY"
+                                        maxDate={dayjs()}
                                         onChange={(newValue) => setDateDebut(newValue)}
                                         slotProps={{ 
                                             textField: { 
@@ -332,6 +333,7 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                         label="Date de fin"
                                         value={dateFin}
                                         format="DD/MM/YYYY"
+                                        maxDate={dayjs()}
                                         onChange={(newValue) => setDateFin(newValue)}
                                         slotProps={{ 
                                             textField: { 
@@ -480,7 +482,7 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                                 borderRadius: 2,
                                                 overflow: 'hidden',
                                                 position: 'relative',
-                                                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                                                transition: 'trans 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
                                                 '&:hover': {
                                                     transform: 'translateY(-4px)',
@@ -619,10 +621,8 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                                             title: function(context) {
                                                                 if (!context.length) return 'Date inconnue';
                                                                 
-                                                                // Récupérer la date à partir du point sélectionné
                                                                 const rawDate = context[0].parsed.x;
                                                                 
-                                                                // Formater la date en français
                                                                 if (rawDate) {
                                                                     const date = new Date(rawDate);
                                                                     return date.toLocaleDateString('fr-FR', {

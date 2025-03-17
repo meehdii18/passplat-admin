@@ -51,6 +51,12 @@ interface Stats {
         XL: number;
         M: number;
     };
+    totalContenantEmprunte: number;
+    totalContenantEmprunteParType: {
+        S: number;
+        XL: number;
+        M: number;
+    };
 }
 
 const StatsTotales: React.FC = () => {
@@ -60,6 +66,7 @@ const StatsTotales: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const CO2_PAR_CONTENANT = 531;
     
     useEffect(() => {
         const fetchStats = async () => {
@@ -160,8 +167,12 @@ const StatsTotales: React.FC = () => {
                 ? `${(stats.nombreEmpruntRendu / stats.nombreEmpruntTotal * 100).toFixed(2)}%` 
                 : 'N/A' 
         },
-        { label: "Émission carbone évitée au total", value: "TBD" }
-    ];
+        { 
+            label: "Émission carbone évitée au total", 
+            value: stats.totalContenantEmprunte 
+                ? `${((stats.totalContenantEmprunte * CO2_PAR_CONTENANT) / 1000).toFixed(2)} kg CO₂` 
+                : '0 kg CO₂'
+        }    ];
 
     const handleExportClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
