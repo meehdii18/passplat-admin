@@ -12,7 +12,8 @@ import {
     Tooltip,
     Divider,
     Fade,
-    useMediaQuery
+    useMediaQuery,
+    Button
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { useTheme, alpha } from "@mui/material/styles";
@@ -251,7 +252,7 @@ const Populaire = () => {
                     </Box>
                 </Paper>
 
-                <Grid container spacing={12}>
+                <Grid container spacing={5}>
                     {/* TOP EMPRUNTEURS */}
                     <Grid xs={12} md={4}>
                         <Card 
