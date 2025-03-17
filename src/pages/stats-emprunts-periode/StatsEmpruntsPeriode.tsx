@@ -79,7 +79,6 @@ const StatsEmpruntsPeriode: React.FC = () => {
     const [showResults, setShowResults] = useState<boolean>(false);
 
     useEffect(() => {
-        // Initialiser avec les 30 derniers jours par défaut
         fetchStats(
             dateDebut!.format('YYYY-MM-DD'), 
             dateFin!.format('YYYY-MM-DD')
@@ -433,7 +432,7 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                                 Période analysée
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Du {formatDate(dateDebut)} au {formatDate(dateFin)}
+                                                Du {dateDebut?.locale('fr').format('DD MMMM YYYY')} au {dateFin?.locale('fr').format('DD MMMM YYYY')}
                                             </Typography>
                                         </Box>
                                     </Box>
