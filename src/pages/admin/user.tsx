@@ -455,8 +455,18 @@ const AdminUserPage: React.FC = () => {
                     </Box>
                 </Paper>
 
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid xs={12} sm={6} md={3}>
+                <Grid 
+                    container 
+                    spacing={2} 
+                    sx={{ 
+                        mb: 4,
+                        width: '100%',
+                        mx: 'auto',
+                        display: 'flex',
+                        justifyContent: 'space-between'
+                    }}
+                >                    
+                <Grid xs={12} sm={5} md={2.4}>  {/* Utilisateurs */}
                         <Card 
                             elevation={0}
                             sx={{
@@ -498,8 +508,8 @@ const AdminUserPage: React.FC = () => {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
-                        <Card 
+                    <Grid xs={12} sm={6} md={2.4}>  {/* Diffuseurs */}
+                    <Card 
                             elevation={0}
                             sx={{
                                 height: '100%',
@@ -540,8 +550,8 @@ const AdminUserPage: React.FC = () => {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
-                        <Card 
+                    <Grid xs={12} sm={6} md={2.4}>  {/* Collecteurs */}
+                    <Card 
                             elevation={0}
                             sx={{
                                 height: '100%',
@@ -582,8 +592,50 @@ const AdminUserPage: React.FC = () => {
                             </CardContent>
                         </Card>
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
-                        <Card 
+                    <Grid xs={12} sm={6} md={2.4}>  {/* Diffuseurs/Collecteurs */}
+                    <Card 
+                            elevation={0}
+                            sx={{
+                                height: '100%',
+                                borderRadius: 2,
+                                overflow: 'hidden',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    height: 8, 
+                                    bgcolor: theme.palette.warning.main,
+                                    width: '100%'
+                                }}
+                            />
+                            <CardContent sx={{ p: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                    <Box 
+                                        sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center',
+                                            bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                            borderRadius: '50%',
+                                            p: 1,
+                                            mr: 2
+                                        }}
+                                    >
+                                        <SwapHorizIcon sx={{ color: theme.palette.warning.main }} />
+                                    </Box>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        {users.filter(u => u.role === ROLES.BOTH).length}
+                                    </Typography>
+                                </Box>
+                                <Typography variant="body2" color="text.secondary">
+                                    Diffuseurs/Collecteurs
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid xs={12} sm={6} md={2.4}>  {/* Administrateurs */}
+                    <Card 
                             elevation={0}
                             sx={{
                                 height: '100%',
