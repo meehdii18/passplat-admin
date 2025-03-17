@@ -86,6 +86,7 @@ interface Emprunt {
     diffuseur: DiffuseurCollecteur;
     dateEmprunt: string;
     quantite: number;
+    quantiteRetournee: number;
     dateRenduPrevu: string;
     dateRenduReel: string | null;
     collecteur: DiffuseurCollecteur | null;
@@ -139,6 +140,9 @@ const AdminEmpruntPage: React.FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'returned'>('all');
+    const [partialReturnDialogOpen, setPartialReturnDialogOpen] = useState(false);
+    const [empruntToPartialReturn, setEmpruntToPartialReturn] = useState<Emprunt | null>(null);
+    const [partialReturnQuantity, setPartialReturnQuantity] = useState(1);
 
     useEffect(() => {
         const loadData = async () => {
@@ -333,6 +337,14 @@ const AdminEmpruntPage: React.FC = () => {
     };
 
     const handleTerminate = (emprunt: Emprunt) => {
+        if (isOverdue(emprunt.dateRenduPrevu)) {
+            showSnackbar(
+                "Impossible de terminer l'emprunt : la date de retour prévue est dépassée. Le contenant appartient désormais à l'utilisateur.",
+                'error'
+            );
+            return;
+        }
+        
         setEmpruntToTerminate(emprunt);
         setTerminateDialogOpen(true); 
         setFormData({
@@ -366,7 +378,7 @@ const AdminEmpruntPage: React.FC = () => {
             setEmpruntToTerminate(null);
         }
     };
-    
+
     const sortData = (data: Emprunt[]) => {
         if (!sortConfig.key) return data;
     
@@ -399,6 +411,10 @@ const AdminEmpruntPage: React.FC = () => {
                     aValue = a.quantite;
                     bValue = b.quantite;
                     break;
+                case 'quantiteRetournee':
+                    aValue = a.quantiteRetournee;
+                    bValue = b.quantiteRetournee;
+                    break;
                 case 'dateRenduPrevu':
                     aValue = new Date(a.dateRenduPrevu).getTime();
                     bValue = new Date(b.dateRenduPrevu).getTime();
@@ -413,15 +429,15 @@ const AdminEmpruntPage: React.FC = () => {
                     break;
                 default:
                     return 0;
-                }
+            }
         
-                if (aValue === null) return 1;
-                if (bValue === null) return -1;
-                
-                const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-                return sortConfig.direction === 'asc' ? comparison : -comparison;
-            });
-        };
+            if (aValue === null) return 1;
+            if (bValue === null) return -1;
+            
+            const comparison = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    };
 
     const handleSort = (key: string) => {
         setSortConfig(current => ({
@@ -456,7 +472,10 @@ const AdminEmpruntPage: React.FC = () => {
     const activeEmprunts = filteredEmprunts.filter(e => !e.dateRenduReel).length;
     const returnedEmprunts = filteredEmprunts.filter(e => e.dateRenduReel).length;
     const overdueEmprunts = filteredEmprunts.filter(e => !e.dateRenduReel && isOverdue(e.dateRenduPrevu)).length;
-
+    const partialReturnedEmprunts = filteredEmprunts.filter(e => 
+        !e.dateRenduReel && e.quantiteRetournee > 0 && e.quantiteRetournee < e.quantite
+    ).length;
+    
     // Formatage des dates
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return '-';
@@ -466,6 +485,50 @@ const AdminEmpruntPage: React.FC = () => {
             month: '2-digit', 
             year: 'numeric'
         });
+    };
+
+    const handlePartialReturn = (emprunt: Emprunt) => {
+        setEmpruntToPartialReturn(emprunt);
+        setPartialReturnQuantity(1);  // Valeur par défaut
+        setPartialReturnDialogOpen(true);
+        setFormData({
+            ...formData,
+            IdCollecteur: 0
+        });
+    };
+
+    const handlePartialReturnConfirm = async () => {
+        if (empruntToPartialReturn && formData.IdCollecteur) {
+            try {
+                await axios.post(
+                    'http://localhost:8080/emprunt/retournerContenant',
+                    null,
+                    {
+                        params: {
+                            empruntId: empruntToPartialReturn.id,
+                            quantite: partialReturnQuantity,
+                            collecteurId: formData.IdCollecteur
+                        }
+                    }
+                );
+                showSnackbar('Contenants retournés avec succès', 'success');
+                fetchEmprunts();
+                setPartialReturnDialogOpen(false);
+                setEmpruntToPartialReturn(null);
+            } catch (error: any) {
+                console.error('Error:', error);
+                if (error.status === 409 || error?.response?.status === 409) {
+                    showSnackbar(
+                        "Impossible de faire un retour partiel : la date de retour prévue est dépassée. Le contenant appartient désormais à l'utilisateur.",
+                        'error'
+                    );
+                } else {
+                    showSnackbar('Erreur lors du retour des contenants', 'error');
+                }
+                setPartialReturnDialogOpen(false);
+                setEmpruntToPartialReturn(null);
+            }
+        }
     };
 
     const getContenantColor = (type: string) => {
@@ -491,7 +554,7 @@ const AdminEmpruntPage: React.FC = () => {
             >
                 <CircularProgress color="inherit" />
             </Backdrop>
-
+    
             <Container>
                 <Paper
                     elevation={0}
@@ -535,15 +598,14 @@ const AdminEmpruntPage: React.FC = () => {
                     </Box>
                 </Paper>
                 
-                <Grid container spacing={0} sx={{ mb: 4, ml: 5 }}>
-                    <Grid xs={12} sm={6} md={3}>
+                <Grid container spacing={2} sx={{ mb: 4 }}>
+                    <Grid item xs={12} sm={6} md={2.4}>
                         <Card 
                             elevation={0}
                             sx={{
                                 borderRadius: 2,
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                                height: '100%',
-                                width: '70%'
+                                height: '100%'
                             }}
                         >
                             <Box 
@@ -573,13 +635,13 @@ const AdminEmpruntPage: React.FC = () => {
                             </Box>
                         </Card>
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.4}>
                         <Card 
                             elevation={0}
                             sx={{
                                 borderRadius: 2,
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                                width: '70%'
+                                height: '100%'
                             }}
                         >
                             <Box 
@@ -609,13 +671,13 @@ const AdminEmpruntPage: React.FC = () => {
                             </Box>
                         </Card>
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.4}>
                         <Card 
                             elevation={0}
                             sx={{
                                 borderRadius: 2,
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                                width: '70%'
+                                height: '100%'
                             }}
                         >
                             <Box 
@@ -645,13 +707,13 @@ const AdminEmpruntPage: React.FC = () => {
                             </Box>
                         </Card>
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.4}>
                         <Card 
                             elevation={0}
                             sx={{
                                 borderRadius: 2,
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                                width: '70%'
+                                height: '100%'
                             }}
                         >
                             <Box 
@@ -676,6 +738,42 @@ const AdminEmpruntPage: React.FC = () => {
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
                                         Emprunts en retard
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2.4}>
+                        <Card 
+                            elevation={0}
+                            sx={{
+                                borderRadius: 2,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                height: '100%'
+                            }}
+                        >
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    p: 2
+                                }}
+                            >
+                                <Avatar
+                                    sx={{ 
+                                        bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                        color: theme.palette.warning.main,
+                                        mr: 2
+                                    }}
+                                >
+                                    <ArrowBackIcon />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        {partialReturnedEmprunts}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Retours partiels
                                     </Typography>
                                 </Box>
                             </Box>
@@ -782,63 +880,74 @@ const AdminEmpruntPage: React.FC = () => {
                                     <MenuItem value="dateRenduPrevu">Date prévue</MenuItem>
                                     <MenuItem value="user">Utilisateur</MenuItem>
                                     <MenuItem value="diffuseur">Diffuseur</MenuItem>
-                                    <MenuItem value="contenant">Contenant                                    </MenuItem>
+                                    <MenuItem value="contenant">Contenant</MenuItem>
                                     <MenuItem value="quantite">Quantité</MenuItem>
+                                    <MenuItem value="quantiteRetournee">Quantité retournée</MenuItem>
                                 </Select>
                             </FormControl>
                         </Box>
                     </Box>
-
-                    <TableContainer>
-                        <Table sx={{ minWidth: 650 }}>
-                            <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <PersonIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Utilisateur
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <InventoryIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Contenant
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <StorefrontIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Diffuseur
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <CalendarTodayIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Date emprunt
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Qté</TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <ScheduleIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Date prévue
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <DoneIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Date rendu
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ fontWeight: 'bold' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <LocalShippingIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
-                                            Collecteur
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
+    
+                    <TableContainer sx={{ 
+                        overflowX: 'auto', 
+                        maxWidth: '100%', 
+                        '& .MuiTable-root': {
+                            width: '100%'  
+                        }
+                    }}>                        
+                    <Table sx={{ width: '100%', minWidth: 850 }} size="small">
+                    <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold', width: '13%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <PersonIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                        Utilisateur
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '7%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <InventoryIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <StorefrontIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                        Diffuseur
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '8%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <CalendarTodayIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                        {isMobile ? 'Emprunt' : 'Date emprunt'}
+                                    </Box>
+                                </TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold', width: '5%' }}>Qté</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold', width: '6%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {isMobile ? 'Ret.' : 'Retourné'}
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '8%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <ScheduleIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                        {isMobile ? 'Prévue' : 'Date prévue'}
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '8%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <DoneIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                        {isMobile ? 'Rendu' : 'Date rendu'}
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <LocalShippingIcon sx={{ mr: 1, color: theme.palette.primary.main, fontSize: 18 }} />
+                                        Collecteur
+                                    </Box>
+                                </TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold', width: '15%' }}>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
                             <TableBody>
                                 {paginatedEmprunts.length > 0 ? (
                                     paginatedEmprunts.map((emprunt) => (
@@ -858,10 +967,10 @@ const AdminEmpruntPage: React.FC = () => {
                                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                     <Avatar 
                                                         sx={{ 
-                                                            width: 32, 
-                                                            height: 32, 
+                                                            width: 28, 
+                                                            height: 28, 
                                                             bgcolor: theme.palette.primary.main,
-                                                            fontSize: '0.9rem',
+                                                            fontSize: '0.85rem',
                                                             mr: 1
                                                         }}
                                                     >
@@ -882,8 +991,8 @@ const AdminEmpruntPage: React.FC = () => {
                                                     label={emprunt.contenant?.nom} 
                                                     size="small" 
                                                     sx={{ 
-                                                        bgcolor: alpha(getContenantColor(emprunt.contenant?.nom.split(' ')[1]), 0.1),
-                                                        color: getContenantColor(emprunt.contenant?.nom.split(' ')[1]),
+                                                        bgcolor: alpha(getContenantColor(emprunt.contenant?.nom), 0.1),
+                                                        color: getContenantColor(emprunt.contenant?.nom),
                                                         fontWeight: 'medium'
                                                     }}
                                                 />
@@ -922,6 +1031,25 @@ const AdminEmpruntPage: React.FC = () => {
                                                     }}
                                                 />
                                             </TableCell>
+                                            
+                                            <TableCell align="center">
+                                                <Chip 
+                                                    label={emprunt.quantiteRetournee} 
+                                                    size="small" 
+                                                    sx={{ 
+                                                        minWidth: 36,
+                                                        bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                                        color: theme.palette.warning.main,
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                />
+                                                {emprunt.quantiteRetournee > 0 && emprunt.quantiteRetournee < emprunt.quantite && (
+                                                    <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                                                        Partiel
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                            
                                             <TableCell>
                                                 <Box sx={{ 
                                                     display: 'flex',
@@ -947,6 +1075,8 @@ const AdminEmpruntPage: React.FC = () => {
                                                     )}
                                                 </Box>
                                             </TableCell>
+                                            
+                                            {/* Autres cellules existantes */}
                                             <TableCell>
                                                 {emprunt.dateRenduReel ? (
                                                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -989,7 +1119,14 @@ const AdminEmpruntPage: React.FC = () => {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                                <Box sx={{ 
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'repeat(2, 1fr)',
+                                                    gap: 1,
+                                                    justifyContent: 'center',
+                                                    width: 'fit-content',
+                                                    margin: '0 auto'
+                                                }}>
                                                     <Tooltip title="Modifier">
                                                         <IconButton 
                                                             size="small" 
@@ -1023,20 +1160,57 @@ const AdminEmpruntPage: React.FC = () => {
                                                                     <ScheduleIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
-                                                            <Tooltip title="Terminer l'emprunt">
-                                                                <IconButton 
-                                                                    size="small" 
-                                                                    onClick={() => handleTerminate(emprunt)}
-                                                                    sx={{ 
-                                                                        color: theme.palette.success.main,
-                                                                        bgcolor: alpha(theme.palette.success.main, 0.1),
-                                                                        '&:hover': {
-                                                                            bgcolor: alpha(theme.palette.success.main, 0.2),
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <DoneIcon fontSize="small" />
-                                                                </IconButton>
+                                                            <Tooltip title={
+                                                                isOverdue(emprunt.dateRenduPrevu) 
+                                                                    ? "Retour partiel impossible : date dépassée" 
+                                                                    : "Retour partiel"
+                                                            }>
+                                                                <span>
+                                                                    <IconButton 
+                                                                        size="small" 
+                                                                        onClick={() => handlePartialReturn(emprunt)}
+                                                                        disabled={isOverdue(emprunt.dateRenduPrevu)}
+                                                                        sx={{ 
+                                                                            color: theme.palette.warning.main,
+                                                                            bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                                                            '&:hover': {
+                                                                                bgcolor: alpha(theme.palette.warning.main, 0.2),
+                                                                            },
+                                                                            '&.Mui-disabled': {
+                                                                                bgcolor: alpha(theme.palette.action.disabled, 0.1),
+                                                                                color: theme.palette.action.disabled
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <ArrowBackIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </span>
+                                                            </Tooltip>
+                                                            <Tooltip title={
+                                                                isOverdue(emprunt.dateRenduPrevu) 
+                                                                    ? "Impossible de terminer : date dépassée" 
+                                                                    : "Terminer l'emprunt"
+                                                            }>
+                                                                <span>
+                                                                    <IconButton 
+                                                                        size="small" 
+                                                                        onClick={() => handleTerminate(emprunt)}
+                                                                        disabled={isOverdue(emprunt.dateRenduPrevu)}
+                                                                        sx={{ 
+                                                                            color: theme.palette.success.main,
+                                                                            bgcolor: alpha(theme.palette.success.main, 0.1),
+                                                                            '&:hover': {
+                                                                                bgcolor: alpha(theme.palette.success.main, 0.2),
+                                                                            },
+                                                                            '&.Mui-disabled': {
+                                                                                bgcolor: alpha(theme.palette.action.disabled, 0.1),
+                                                                                color: theme.palette.action.disabled
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <DoneIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </span>
                                                             </Tooltip>
                                                         </>
                                                     )}
@@ -1046,7 +1220,7 @@ const AdminEmpruntPage: React.FC = () => {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                                        <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
                                             <Typography variant="body1" color="text.secondary">
                                                 {emprunts.length === 0 ? 
                                                     'Aucun emprunt enregistré' : 
@@ -1144,18 +1318,9 @@ const AdminEmpruntPage: React.FC = () => {
                                                 <InventoryIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
                                             }
                                         >
-                                            {emprunts.reduce((containers, emprunt) => {
-                                                if (emprunt.contenant && !containers.some(c => c.id === emprunt.contenant.id)) {
-                                                    containers.push(emprunt.contenant);
-                                                }
-                                                return containers;
-                                            }, [] as Contenant[])
-                                                .sort((a, b) => a.nom.localeCompare(b.nom))
-                                                .map(contenant => (
-                                                    <MenuItem key={contenant.id} value={contenant.id}>
-                                                        {contenant.nom}
-                                                    </MenuItem>
-                                            ))}
+                                            <MenuItem value={1}>XL</MenuItem>
+                                            <MenuItem value={2}>M</MenuItem>
+                                            <MenuItem value={3}>S</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
@@ -1173,12 +1338,13 @@ const AdminEmpruntPage: React.FC = () => {
                                             }
                                         >
                                             {Array.from(diffuseurs.values())
+                                                .filter(diff => diff.account.role === 3 || diff.account.role === 5)
                                                 .sort((a, b) => a.nom.localeCompare(b.nom))
                                                 .map(diffuseur => (
                                                     <MenuItem key={diffuseur.id} value={diffuseur.id}>
                                                         {diffuseur.nom}
                                                     </MenuItem>
-                                            ))}
+                                                ))}
                                         </Select>
                                     </FormControl>
                                 </Grid>
@@ -1189,15 +1355,15 @@ const AdminEmpruntPage: React.FC = () => {
                                         label="Quantité"
                                         type="number"
                                         value={formData.quantite}
-                                        onChange={(e) => setFormData({...formData, quantite: parseInt(e.target.value, 10)})}
+                                        onChange={(e) => setFormData({...formData, quantite: parseInt(e.target.value) || 1})}
                                         required
                                         InputProps={{
+                                            inputProps: { min: 1 },
                                             startAdornment: (
                                                 <InputAdornment position="start">
                                                     <InventoryIcon sx={{ color: theme.palette.text.secondary }} />
                                                 </InputAdornment>
-                                            ),
-                                            inputProps: { min: 1 }
+                                            )
                                         }}
                                     />
                                 </Grid>
@@ -1223,7 +1389,7 @@ const AdminEmpruntPage: React.FC = () => {
                                     <TextField
                                         fullWidth
                                         margin="dense"
-                                        label="Date de rendu prévu"
+                                        label="Date de retour prévue"
                                         type="date"
                                         value={formData.dateRenduPrevu}
                                         onChange={(e) => setFormData({...formData, dateRenduPrevu: e.target.value})}
@@ -1243,10 +1409,13 @@ const AdminEmpruntPage: React.FC = () => {
                                             <TextField
                                                 fullWidth
                                                 margin="dense"
-                                                label="Date de rendu réel"
+                                                label="Date de retour réelle"
                                                 type="date"
                                                 value={formData.dateRenduReel || ''}
-                                                onChange={(e) => setFormData({...formData, dateRenduReel: e.target.value || null})}
+                                                onChange={(e) => setFormData({
+                                                    ...formData, 
+                                                    dateRenduReel: e.target.value ? e.target.value : null
+                                                })}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -1268,7 +1437,7 @@ const AdminEmpruntPage: React.FC = () => {
                                                         <LocalShippingIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
                                                     }
                                                 >
-                                                    <MenuItem value={0}>Aucun</MenuItem>
+                                                    <MenuItem value={0}>Non défini</MenuItem>
                                                     {getCollecteurs().map(collecteur => (
                                                         <MenuItem key={collecteur.id} value={collecteur.id}>
                                                             {collecteur.nom}
@@ -1282,11 +1451,10 @@ const AdminEmpruntPage: React.FC = () => {
                             </Grid>
                         </form>
                     </DialogContent>
-                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <DialogActions sx={{ p: 2 }}>
                         <Button 
                             onClick={() => setOpenDialog(false)}
                             variant="outlined"
-                            startIcon={<CloseIcon />}
                         >
                             Annuler
                         </Button>
@@ -1294,9 +1462,8 @@ const AdminEmpruntPage: React.FC = () => {
                             onClick={handleSubmit}
                             variant="contained"
                             startIcon={selectedEmprunt ? <EditIcon /> : <AddIcon />}
-                            color="primary"
                         >
-                            {selectedEmprunt ? 'Enregistrer' : 'Créer'}
+                            {selectedEmprunt ? 'Modifier' : 'Ajouter'}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -1305,6 +1472,8 @@ const AdminEmpruntPage: React.FC = () => {
                 <Dialog 
                     open={prolongDialogOpen} 
                     onClose={() => setProlongDialogOpen(false)}
+                    fullWidth
+                    maxWidth="xs"
                     PaperProps={{
                         sx: {
                             borderRadius: 2,
@@ -1320,9 +1489,9 @@ const AdminEmpruntPage: React.FC = () => {
                             </Typography>
                         </Box>
                     </DialogTitle>
-                    <DialogContent sx={{ pt: 3, pb: 1 }}>
+                    <DialogContent sx={{ pt: 3 }}>
                         <Typography variant="body1">
-                            Êtes-vous sûr de vouloir prolonger cet emprunt de 14 jours supplémentaires ?
+                            Êtes-vous sûr de vouloir prolonger cet emprunt d'une semaine?
                         </Typography>
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
@@ -1343,7 +1512,7 @@ const AdminEmpruntPage: React.FC = () => {
                     </DialogActions>
                 </Dialog>
 
-                {/* Dialogue de terminaison */}
+                {/* Dialogue pour terminer un emprunt */}
                 <Dialog 
                     open={terminateDialogOpen} 
                     onClose={() => setTerminateDialogOpen(false)}
@@ -1366,7 +1535,7 @@ const AdminEmpruntPage: React.FC = () => {
                     </DialogTitle>
                     <DialogContent sx={{ pt: 3 }}>
                         <Typography variant="body1" sx={{ mb: 3 }}>
-                            Vous êtes sur le point de terminer l'emprunt suivant:
+                            Veuillez sélectionner le collecteur pour finaliser le retour des contenants:
                         </Typography>
                         
                         {empruntToTerminate && (
@@ -1386,16 +1555,13 @@ const AdminEmpruntPage: React.FC = () => {
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <b>Quantité:</b> {empruntToTerminate.quantite}
                                 </Typography>
-                                <Typography variant="body2">
-                                    <b>Diffuseur:</b> {empruntToTerminate.diffuseur?.nom}
-                                </Typography>
                             </Box>
                         )}
                         
                         <FormControl fullWidth margin="dense" required>
-                            <InputLabel id="collecteur-term-label">Collecteur</InputLabel>
+                            <InputLabel id="collecteur-terminate-label">Collecteur</InputLabel>
                             <Select
-                                labelId="collecteur-term-label"
+                                labelId="collecteur-terminate-label"
                                 value={formData.IdCollecteur}
                                 onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
                                 label="Collecteur"
@@ -1430,22 +1596,137 @@ const AdminEmpruntPage: React.FC = () => {
                     </DialogActions>
                 </Dialog>
 
-                {/* Snackbar de notification */}
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={6000}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                {/* Dialogue pour le retour partiel des contenants */}
+                <Dialog 
+                    open={partialReturnDialogOpen} 
+                    onClose={() => setPartialReturnDialogOpen(false)}
+                    fullWidth
+                    maxWidth="sm"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{ bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <ArrowBackIcon sx={{ mr: 1, color: theme.palette.warning.main }} />
+                            <Typography variant="h6" fontWeight="medium">
+                                Retour partiel de contenants
+                            </Typography>
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent sx={{ pt: 3 }}>
+                        <Typography variant="body1" sx={{ mb: 3 }}>
+                            Veuillez spécifier le nombre de contenants à retourner:
+                        </Typography>
+                        
+                        {empruntToPartialReturn && (
+                            <Box sx={{ 
+                                mb: 3,
+                                p: 2,
+                                bgcolor: alpha(theme.palette.primary.main, 0.05),
+                                borderRadius: 1,
+                                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                            }}>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Utilisateur:</b> {empruntToPartialReturn.user?.prenom} {empruntToPartialReturn.user?.nom}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Contenant:</b> {empruntToPartialReturn.contenant?.nom}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Quantité totale empruntée:</b> {empruntToPartialReturn.quantite}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Quantité déjà retournée:</b> {empruntToPartialReturn.quantiteRetournee}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <b>Quantité restante à retourner:</b> {empruntToPartialReturn.quantite - empruntToPartialReturn.quantiteRetournee}
+                                </Typography>
+                            </Box>
+                        )}
+                        
+                        <TextField
+                            fullWidth
+                            margin="dense"
+                            label="Quantité à retourner"
+                            type="number"
+                            value={partialReturnQuantity}
+                            onChange={(e) => {
+                                const value = parseInt(e.target.value, 10);
+                                if (empruntToPartialReturn) {
+                                    const maxReturn = empruntToPartialReturn.quantite - empruntToPartialReturn.quantiteRetournee;
+                                    if (value > 0 && value <= maxReturn) {
+                                        setPartialReturnQuantity(value);
+                                    }
+                                }
+                            }}
+                            required
+                            InputProps={{
+                                inputProps: { 
+                                    min: 1, 
+                                    max: empruntToPartialReturn ? 
+                                        (empruntToPartialReturn.quantite - empruntToPartialReturn.quantiteRetournee) : 1 
+                                }
+                            }}
+                            helperText={empruntToPartialReturn ? 
+                                `Doit être entre 1 et ${empruntToPartialReturn.quantite - empruntToPartialReturn.quantiteRetournee}` : 
+                                "Veuillez spécifier une quantité valide"}
+                        />
+                        
+                        <FormControl fullWidth margin="dense" required>
+                            <InputLabel id="collecteur-partial-return-label">Collecteur</InputLabel>
+                            <Select
+                                labelId="collecteur-partial-return-label"
+                                value={formData.IdCollecteur}
+                                onChange={(e) => setFormData({...formData, IdCollecteur: Number(e.target.value)})}
+                                label="Collecteur"
+                                startAdornment={
+                                    <LocalShippingIcon sx={{ color: theme.palette.text.secondary, mr: 1 }} />
+                                }
+                            >
+                                {getCollecteurs().map(collecteur => (
+                                    <MenuItem key={collecteur.id} value={collecteur.id}>
+                                        {collecteur.nom}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button 
+                            onClick={() => setPartialReturnDialogOpen(false)}
+                            variant="outlined"
+                        >
+                            Annuler
+                        </Button>
+                        <Button 
+                            onClick={handlePartialReturnConfirm}
+                            variant="contained"
+                            color="warning"
+                            startIcon={<ArrowBackIcon />}
+                            disabled={!formData.IdCollecteur || partialReturnQuantity <= 0 || 
+                                (empruntToPartialReturn && partialReturnQuantity > 
+                                    (empruntToPartialReturn.quantite - empruntToPartialReturn.quantiteRetournee))}
+                        >
+                            Confirmer le retour partiel
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                
+                <Snackbar 
+                    open={snackbar.open} 
+                    autoHideDuration={6000} 
+                    onClose={() => setSnackbar({...snackbar, open: false})}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 >
                     <Alert 
-                        onClose={() => setSnackbar({ ...snackbar, open: false })} 
+                        onClose={() => setSnackbar({...snackbar, open: false})} 
                         severity={snackbar.severity}
                         variant="filled"
-                        sx={{ 
-                            width: '100%',
-                            boxShadow: 3,
-                            borderRadius: 2
-                        }}
+                        sx={{ width: '100%' }}
                     >
                         {snackbar.message}
                     </Alert>
