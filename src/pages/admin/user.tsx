@@ -50,6 +50,8 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import LockIcon from '@mui/icons-material/Lock';
+import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid2';
@@ -169,6 +171,8 @@ const AdminUserPage: React.FC = () => {
     const [roleFilter, setRoleFilter] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -378,6 +382,22 @@ const AdminUserPage: React.FC = () => {
                 return theme.palette.warning.main;
             default:
                 return theme.palette.grey[500];
+        }
+    };
+
+    const handlePasswordChange = async () => {
+        try {
+            if (selectedUser) {
+                await axios.patch(`http://localhost:8080/account/updateMdp/${selectedUser.id}/${newPassword}`, {
+                    mdp: newPassword
+                });
+                showSnackbar('Mot de passe modifié avec succès', 'success');
+                setPasswordDialogOpen(false);
+                setNewPassword('');
+            }
+        } catch (error) {
+            console.error('Error updating password:', error);
+            showSnackbar('Erreur lors de la modification du mot de passe', 'error');
         }
     };
 
@@ -1131,6 +1151,20 @@ const AdminUserPage: React.FC = () => {
                                 </Grid>
                             )}
                         </Grid>
+                        {selectedUser && (
+                            <Grid xs={12}>
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => setPasswordDialogOpen(true)}
+                                    startIcon={<LockIcon />}
+                                    fullWidth
+                                    sx={{ mt: 2 }}
+                                >
+                                    Modifier le mot de passe
+                                </Button>
+                            </Grid>
+                        )}
                     </DialogContent>
                     <DialogActions sx={{ px: 3, py: 2, backgroundColor: alpha(theme.palette.background.default, 0.5) }}>
                         <Button 
@@ -1321,6 +1355,65 @@ const AdminUserPage: React.FC = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            <Dialog
+                open={passwordDialogOpen}
+                onClose={() => setPasswordDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    elevation: 8,
+                    sx: { borderRadius: 2 }
+                }}
+            >
+                <DialogTitle 
+                    sx={{ 
+                        pb: 1, 
+                        borderBottom: `1px solid ${theme.palette.divider}`,
+                        bgcolor: alpha(theme.palette.primary.main, 0.05)
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <LockIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                        <Typography variant="h6" component="div" fontWeight="bold">
+                            Modifier le mot de passe
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    <TextField
+                        label="Nouveau mot de passe"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        fullWidth
+                        required
+                        variant="outlined"
+                        margin="dense"
+                    />
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2, backgroundColor: alpha(theme.palette.background.default, 0.5) }}>
+                    <Button 
+                        onClick={() => {
+                            setPasswordDialogOpen(false);
+                            setNewPassword('');
+                        }}
+                        variant="outlined"
+                        sx={{ borderRadius: '8px' }}
+                    >
+                        Annuler
+                    </Button>
+                    <Button 
+                        onClick={handlePasswordChange}
+                        variant="contained"
+                        disabled={!newPassword}
+                        startIcon={<SaveIcon />}
+                        sx={{ borderRadius: '8px', boxShadow: 2 }}
+                    >
+                        Enregistrer
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Backdrop de chargement */}
             <Backdrop
