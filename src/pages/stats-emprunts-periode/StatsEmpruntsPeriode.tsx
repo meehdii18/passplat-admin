@@ -199,8 +199,8 @@ const StatsEmpruntsPeriode: React.FC = () => {
         );
         
         const csvContent = [
-            headers.join(','),
-            ...csvData.map((row: any[]) => row.join(','))
+            headers.join(';'),
+            ...csvData.map((row: any[]) => row.join(';'))
         ].join('\n');
         
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
