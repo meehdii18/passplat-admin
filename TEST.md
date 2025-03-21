@@ -24,18 +24,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | AUTH-05 | Protection des routes | 1. Essayer d'accéder directement à une URL protégée sans être connecté | Redirection vers la page de connexion | À tester |
 | AUTH-06 | Confirmation de déconnexion | 1. Se connecter<br>2. Cliquer sur le bouton de déconnexion<br>3. Vérifier l'affichage de la boîte de dialogue<br>4. Cliquer sur "Annuler" | La boîte de dialogue se ferme et l'utilisateur reste connecté | À tester |
 
-### 3.2 Tableau de bord
-
-| ID | Description | Étapes | Résultat attendu | Statut |
-|----|-------------|--------|------------------|--------|
-| DASH-01 | Affichage des statistiques principales | 1. Se connecter<br>2. Accéder au tableau de bord | Les widgets de statistiques s'affichent correctement avec les données à jour | À tester |
-| DASH-02 | Graphiques et visualisations | 1. Se connecter<br>2. Accéder au tableau de bord | Les graphiques se chargent et affichent correctement les données | À tester |
-| DASH-03 | Filtrage des données par période | 1. Se connecter<br>2. Accéder au tableau de bord<br>3. Sélectionner une période (jour/semaine/mois) | Les données sont filtrées selon la période sélectionnée | À tester |
-| DASH-04 | Actualisation des données | 1. Se connecter<br>2. Accéder au tableau de bord<br>3. Cliquer sur "Actualiser" | Les données sont mises à jour | À tester |
-| DASH-05 | Navigation entre onglets | 1. Se connecter<br>2. Cliquer successivement sur chaque onglet du tableau de bord | Chaque onglet s'affiche correctement avec son contenu spécifique | À tester |
-| DASH-06 | Menu administrateur | 1. Se connecter<br>2. Cliquer sur l'icône d'administration<br>3. Vérifier l'affichage du menu déroulant | Le menu administrateur s'affiche avec toutes les options | À tester |
-
-### 3.3 Gestion des emprunts
+### 3.2 Gestion des emprunts
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -48,8 +37,9 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | EMP-07 | Tri des emprunts | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur les en-têtes de colonnes | Les emprunts sont triés selon la colonne sélectionnée | À tester |
 | EMP-08 | Mise à jour des données d'en-tête | 1. Accéder à la page "Emprunts"<br>2. Ajouter un emprunt (EMP-03)<br>3. Vérifier que le total des emprunt a augmenté<br>4. Vérifier que le nombre d'emprunt actif augmente<br>5. Terminer l'emprunt<br>6. Vérifier que le nombre d'emprunt rendus augmente | Les données sont mise à jour | À tester |
 | EMP-09 | Retour au tableau de bord | 1. Accéder à la page "Emprunts"<br>2. Clique sur le bouton retour<br>3. Vérifier qu'on arrive bien sur la page principale| On reviens à la page principale | À tester |
+| EMP-10 | Emprunt sans stock | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur "Ajouter"<br>3. Remplir le formulaire en sélectionnant un diffuseur sans stock<br>4. Valider | Message d'erreur indiquant que le diffuseur n'a pas de stock | FAIL (message d'erreur incorrect) |
 
-### 3.4 Gestion des utilisateurs
+### 3.3 Gestion des utilisateurs
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -60,7 +50,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | USER-05 | Recherche d'utilisateurs | 1. Accéder à la page "Utilisateurs"<br>2. Saisir un terme dans le champ de recherche | Les résultats correspondant aux critères s'affichent | À tester |
 | USER-06 | Attribution de rôles | 1. Accéder à la page "Utilisateurs"<br>2. Modifier un utilisateur<br>3. Changer son rôle<br>4. Valider | Le rôle de l'utilisateur est mis à jour | À tester |
 
-### 3.5 Gestion de l'inventaire
+### 3.4 Gestion de l'inventaire
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -71,7 +61,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | INV-05 | Recherche d'articles | 1. Accéder à la page "Inventaire"<br>2. Utiliser le champ de recherche | Les articles correspondant au critère s'affichent | À tester |
 | INV-06 | Catégorisation des articles | 1. Accéder à la page "Inventaire"<br>2. Filtrer par catégorie | Seuls les articles de la catégorie sélectionnée s'affichent | À tester |
 
-### 3.6 Statistiques totales
+### 3.5 Statistiques totales
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -80,7 +70,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | STAT-03 | Affichage des ratios | 1. Se connecter<br>2. Accéder à l'onglet Statistiques Totales | Les ratios (rendus/total) s'affichent avec le pourcentage correct | À tester |
 | STAT-04 | Gestion des erreurs | 1. Provoquer une erreur de chargement des données<br>2. Observer l'affichage | Un message d'erreur approprié s'affiche | À tester |
 
-### 3.7 Graphiques d'emprunts
+### 3.6 Graphiques d'emprunts
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -88,7 +78,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | GRAPH-02 | Interactivité des graphiques | 1. Se connecter<br>2. Accéder à l'onglet Graphe Emprunts<br>3. Passer la souris sur un élément du graphique | Les infobulles s'affichent avec les données détaillées | À tester |
 | GRAPH-03 | Filtrage par période | 1. Se connecter<br>2. Accéder à l'onglet Graphe Emprunts<br>3. Sélectionner différentes périodes | Le graphique se met à jour selon la période sélectionnée | À tester |
 
-### 3.8 Statistiques par diffuseur
+### 3.7 Statistiques par diffuseur
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -96,7 +86,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | DIFF-02 | Affichage des données spécifiques | 1. Se connecter<br>2. Accéder à l'onglet Stats Diffuseur<br>3. Sélectionner un diffuseur | Les données sur les emprunts et les performances du diffuseur s'affichent correctement | À tester |
 | DIFF-03 | Recherche de diffuseurs | 1. Se connecter<br>2. Accéder à l'onglet Stats Diffuseur<br>3. Utiliser la fonction de recherche | La liste des diffuseurs se filtre selon les critères de recherche | À tester |
 
-### 3.9 Statistiques d'emprunts par période
+### 3.8 Statistiques d'emprunts par période
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
@@ -104,25 +94,9 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | PER-02 | Comparaison de périodes | 1. Se connecter<br>2. Accéder à l'onglet Stats Emprunts Période<br>3. Activer la comparaison de périodes<br>4. Sélectionner deux périodes différentes | Les statistiques comparatives s'affichent correctement | À tester |
 | PER-03 | Affichage graphique | 1. Se connecter<br>2. Accéder à l'onglet Stats Emprunts Période | Les graphiques d'évolution sur la période s'affichent correctement | À tester |
 
-### 3.10 Articles populaires
+### 3.9 Articles populaires
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| POP-01 | Affichage des articles populaires | 1. Se connecter<br>2. Accéder à l'onglet Populaire | La liste des articles les plus empruntés s'affiche correctement | À tester |
-| POP-02 | Filtrage par période | 1. Se connecter<br>2. Accéder à l'onglet Populaire<br>3. Sélectionner une période | La liste se met à jour pour afficher les articles populaires durant la période sélectionnée | À tester |
-| POP-03 | Affichage des détails | 1. Se connecter<br>2. Accéder à l'onglet Populaire<br>3. Cliquer sur un article | Les détails de l'article et ses statistiques d'emprunt s'affichent | À tester |
-
-### 3.11 Exports et rapports
-
-| ID | Description | Étapes | Résultat attendu | Statut |
-|----|-------------|--------|------------------|--------|
-| EXP-01 | Export CSV | 1. Accéder à une page avec données (Emprunts, Utilisateurs, etc.)<br>2. Cliquer sur "Exporter en CSV" | Un fichier CSV est téléchargé avec les données correctes | À tester |
-| EXP-02 | Génération de rapport | 1. Accéder à la section "Rapports"<br>2. Sélectionner un type de rapport<br>3. Définir les paramètres<br>4. Générer | Le rapport est généré correctement | À tester |
-| EXP-03 | Export des graphiques | 1. Accéder à une page avec graphiques<br>2. Cliquer sur l'option d'export<br>3. Sélectionner un format (PNG, PDF) | Le graphique est exporté dans le format sélectionné | À tester |
-
-### 3.12 Thème et personnalisation
-
-| ID | Description | Étapes | Résultat attendu | Statut |
-|----|-------------|--------|------------------|--------|
-| THEME-01 | Changement de thème | 1. Accéder aux paramètres<br>2. Sélectionner un thème (clair/sombre)<br>3. Valider | Le thème de l'application change selon la sélection | À tester |
-| THEME-02 | Persistance des préférences | 1. Changer le thème<br>2. Se déconnecter<br>3. Se reconnecter | Le thème précédemment sélectionné est appliqué | À tester |
+| POP-01 | Affichage des articles populaires | 1. Se connecter<br>2. Accéder à l'onglet Populaire | La liste des articles les plus empruntés, des diffuseurs les plus populaires ainsi que les utilisateurs les plus actifs s'affiche correctement | OK |
+| POP-02 | Actualisation des données | 1. Se connecter<br>2. Accéder à l'onglet Populaire<br>3. Mettre à jour les données via une requête API <br>4. Cliquer sur le bouton actualiser| Les données sont mises à jour | OK |
