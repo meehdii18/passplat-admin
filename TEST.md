@@ -28,14 +28,13 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| EMP-01 | Liste des emprunts | 1. Se connecter<br>2. Accéder à la page "Emprunts" | La liste des emprunts s'affiche correctement | À tester |
-| EMP-02 | Filtrage des emprunts | 1. Accéder à la page "Emprunts"<br>2. Utiliser les filtres disponibles | La liste est filtrée selon les critères sélectionnés | À tester |
-| EMP-03 | Création d'un emprunt | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur "Ajouter"<br>3. Remplir le formulaire<br>4. Valider | L'emprunt est créé et apparaît dans la liste | À tester |
-| EMP-04 | Modification d'un emprunt | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur un emprunt<br>3. Modifier les informations<br>4. Valider | L'emprunt est mis à jour avec les nouvelles informations | À tester |
-| EMP-05 | Suppression d'un emprunt | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur l'icône de suppression d'un emprunt<br>3. Confirmer la suppression | L'emprunt est supprimé de la liste | À tester |
+| EMP-01 | Liste des emprunts | 1. Se connecter<br>2. Accéder à la page "Emprunts" | La liste des emprunts s'affiche correctement | OK |
+| EMP-02 | Filtrage des emprunts | 1. Accéder à la page "Emprunts"<br>2. Utiliser les filtres disponibles (tous, en cours et rendus) | La liste est filtrée selon les critères sélectionnés | OK |
+| EMP-03 | Création d'un emprunt | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur "Ajouter"<br>3. Remplir le formulaire<br>4. Valider | L'emprunt est créé et apparaît dans la liste | OK |
+| EMP-04 | Modification d'un emprunt | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur un emprunt<br>3. Modifier les informations<br>4. Valider | L'emprunt est mis à jour avec les nouvelles informations | OK |
 | EMP-06 | Pagination des emprunts | 1. Accéder à la page "Emprunts"<br>2. Naviguer entre les différentes pages de résultats | La pagination fonctionne et affiche correctement les emprunts par page | À tester |
-| EMP-07 | Tri des emprunts | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur les en-têtes de colonnes | Les emprunts sont triés selon la colonne sélectionnée | À tester |
-| EMP-08 | Mise à jour des données d'en-tête | 1. Accéder à la page "Emprunts"<br>2. Ajouter un emprunt (EMP-03)<br>3. Vérifier que le total des emprunt a augmenté<br>4. Vérifier que le nombre d'emprunt actif augmente<br>5. Terminer l'emprunt<br>6. Vérifier que le nombre d'emprunt rendus augmente | Les données sont mise à jour | À tester |
+| EMP-07 | Tri des emprunts | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur le menu déroulant et choisir une données pour le tri | Les emprunts sont triés selon la colonne sélectionnée | OK |
+| EMP-08 | Mise à jour des données d'en-tête | 1. Accéder à la page "Emprunts"<br>2. Ajouter un emprunt <br>3. Vérifier que le total des emprunt a augmenté<br>4. Vérifier que le nombre d'emprunt actif augmente<br>5. Terminer l'emprunt<br>6. Vérifier que le nombre d'emprunt rendus augmente | Les données sont mise à jour | OK |
 | EMP-09 | Retour au tableau de bord | 1. Accéder à la page "Emprunts"<br>2. Clique sur le bouton retour<br>3. Vérifier qu'on arrive bien sur la page principale| On reviens à la page principale | À tester |
 | EMP-10 | Emprunt sans stock | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur "Ajouter"<br>3. Remplir le formulaire en sélectionnant un diffuseur sans stock<br>4. Valider | Message d'erreur indiquant que le diffuseur n'a pas de stock | OK |
 
@@ -65,34 +64,39 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| STAT-01 | Affichage des statistiques utilisateurs | 1. Se connecter<br>2. Accéder à l'onglet Statistiques Totales | Les statistiques d'utilisateurs (nombre total, diffuseurs, collecteurs) s'affichent correctement | À tester |
-| STAT-02 | Affichage des statistiques emprunts | 1. Se connecter<br>2. Accéder à l'onglet Statistiques Totales | Les statistiques d'emprunts (total, rendus, en cours) s'affichent correctement | À tester |
-| STAT-03 | Affichage des ratios | 1. Se connecter<br>2. Accéder à l'onglet Statistiques Totales | Les ratios (rendus/total) s'affichent avec le pourcentage correct | À tester |
-| STAT-04 | Gestion des erreurs | 1. Provoquer une erreur de chargement des données<br>2. Observer l'affichage | Un message d'erreur approprié s'affiche | À tester |
+| STAT-01 | Affichage des statistiques | 1. Se connecter<br>2. Accéder à l'onglet statistiques totales | Les statistiques s'affichent correctement | OK |
+| STAT-02 | Exportation CSV | 1. Se connecter<br>2. Accéder à l'onglet statistiques totales<br>3.Cliquer sur le bouton exporter puis données csv<br>4.Ouvrir le fichier dans excel et vérifier les données | Les données sont correctes dans le fichier CSV | OK |
+
 
 ### 3.6 Graphiques d'emprunts
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| GRAPH-01 | Affichage des graphiques | 1. Se connecter<br>2. Accéder à l'onglet Graphe Emprunts | Les graphiques s'affichent correctement | À tester |
-| GRAPH-02 | Interactivité des graphiques | 1. Se connecter<br>2. Accéder à l'onglet Graphe Emprunts<br>3. Passer la souris sur un élément du graphique | Les infobulles s'affichent avec les données détaillées | À tester |
-| GRAPH-03 | Filtrage par période | 1. Se connecter<br>2. Accéder à l'onglet Graphe Emprunts<br>3. Sélectionner différentes périodes | Le graphique se met à jour selon la période sélectionnée | À tester |
+| GRAPH-01 | Affichage des graphiques | 1. Se connecter<br>2. Accéder à l'onglet graphe des emprunts| Les graphiques s'affichent correctement | OK |
+| GRAPH-02 | Infobulles des graphiques | 1. Se connecter<br>2. Accéder à l'onglet graphe des emprunts<br>3. Passer la souris sur un élément du graphique | Les infobulles s'affichent avec les données détaillées (date et nombre d'emprunt) | OK |
+| GRAPH-03 | Actualiser les données | 1. Se connecter<br>2. Accéder à l'onglet graphe des emprunts<br>3. Mettre à jour les données manuellement via l'API<br>4. Cliquer sur le bouton actualiser | Le graphique se met à jour avec les nouvelles données | OK |
+| GRAPH-04 | Exportation CSV | 1. Se connecter<br>2. Accéder à l'onglet graphe des emprunts<br>3.Cliquer sur le bouton exporter puis données csv<br>4.Ouvrir le fichier dans excel et vérifier les données | Les données sont correctes dans le fichier CSV | OK |
+| GRAPH-04 | Exportation PNG | 1. Se connecter<br>2. Accéder à l'onglet graphe des emprunts<br>3.Cliquer sur le bouton exporter puis données image png<br>4.Ouvrir l'image | Le graphique correspond à celui sur le site | OK |
+
 
 ### 3.7 Statistiques par diffuseur
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| DIFF-01 | Sélection d'un diffuseur | 1. Se connecter<br>2. Accéder à l'onglet Stats Diffuseur<br>3. Sélectionner un diffuseur dans la liste | Les statistiques du diffuseur sélectionné s'affichent | À tester |
-| DIFF-02 | Affichage des données spécifiques | 1. Se connecter<br>2. Accéder à l'onglet Stats Diffuseur<br>3. Sélectionner un diffuseur | Les données sur les emprunts et les performances du diffuseur s'affichent correctement | À tester |
-| DIFF-03 | Recherche de diffuseurs | 1. Se connecter<br>2. Accéder à l'onglet Stats Diffuseur<br>3. Utiliser la fonction de recherche | La liste des diffuseurs se filtre selon les critères de recherche | À tester |
+| DIFF-01 | Affichage des diffuseurs | 1. Se connecter<br>2. Accéder à l'onglet statistiques par diffuseur<br>3. Cliquer sur le menu déroulant de sélection  | La liste des diffuseurs correspond à celle de la base de données | OK
+| DIFF-02 | Selection d'un diffuseurs | 1. Se connecter<br>2. Accéder à l'onglet statistiques par diffuseur<br>3. Cliquer sur le menu déroulant de sélection<br>4.Choisir un diffuseur et cliquer sur rechercher  | Les données s'affiche correctement et correspondent au diffuseur sélectionné | OK
+| DIFF-03 | Nouvelle recherche | 1. Se connecter<br>2. Accéder à l'onglet statistiques par diffuseur<br>3. Cliquer sur le menu déroulant de sélection<br>4.Choisir un diffuseur et cliquer sur rechercher<br>5.Cliquer sur le bouton nouvelle recherche  | La page reviens au stade de recherche avec aucun diffuseur selectionné | OK
 
 ### 3.8 Statistiques d'emprunts par période
 
 | ID | Description | Étapes | Résultat attendu | Statut |
 |----|-------------|--------|------------------|--------|
-| PER-01 | Sélection d'une période | 1. Se connecter<br>2. Accéder à l'onglet Stats Emprunts Période<br>3. Sélectionner une période (jour, semaine, mois, année) | Les statistiques correspondant à la période s'affichent | À tester |
-| PER-02 | Comparaison de périodes | 1. Se connecter<br>2. Accéder à l'onglet Stats Emprunts Période<br>3. Activer la comparaison de périodes<br>4. Sélectionner deux périodes différentes | Les statistiques comparatives s'affichent correctement | À tester |
-| PER-03 | Affichage graphique | 1. Se connecter<br>2. Accéder à l'onglet Stats Emprunts Période | Les graphiques d'évolution sur la période s'affichent correctement | À tester |
+| PER-01 | Sélection d'une période | 1. Se connecter<br>2. Accéder à l'onglet statistique par période<br>3. Sélectionner une période (jour, semaine, mois, année) | Les statistiques correspondant à la période s'affichent | OK |
+| PER-02 | Affichage graphique | 1. Se connecter<br>2. Accéder à l'onglet statistique par période | Les graphiques d'évolution sur la période s'affichent correctement | OK |
+| PER-03 | Exportation CSV | 1. Se connecter<br>2. Accéder à l'onglet statistique par période<br>3.Cliquer sur le bouton CSV<br>4.Ouvrir le fichier dans excel et vérifier les données | Les données sont correctes dans le fichier CSV | OK |
+| PER-04 | Exportation image | 1. Se connecter<br>2. Accéder à l'onglet statistique par période<br>3.Cliquer sur le bouton IMAGE<br>4.Ouvrir l'image et vérifier que le graphique est correct | L'image contient le même graphique que sur le site | OK |
+| PER-05 | Actualisation des données | 1. Se connecter<br>2. Accéder à l'onglet statistique par période<br>3. Mettre à jour les données via une requête API <br>4. Cliquer sur le bouton actualiser| Les données sont mises à jour | OK |
+| PER-05 | Actualisation de la date | 1. Se connecter<br>2. Accéder à l'onglet statistique par période<br>3. Sélectionner une période (jour, semaine, mois, année)<br>4. Choisir de nouvelles dates et cliquer sur analyser | Les statistiques sont mise à jour avec la nouvelle période | OK |
 
 ### 3.9 Articles populaires
 
@@ -100,3 +104,11 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 |----|-------------|--------|------------------|--------|
 | POP-01 | Affichage des articles populaires | 1. Se connecter<br>2. Accéder à l'onglet Populaire | La liste des articles les plus empruntés, des diffuseurs les plus populaires ainsi que les utilisateurs les plus actifs s'affiche correctement | OK |
 | POP-02 | Actualisation des données | 1. Se connecter<br>2. Accéder à l'onglet Populaire<br>3. Mettre à jour les données via une requête API <br>4. Cliquer sur le bouton actualiser| Les données sont mises à jour | OK |
+
+### 3.10 Serveur
+
+| ID | Description | Étapes | Résultat attendu | Statut |
+|----|-------------|--------|------------------|--------|
+| SERV-01 | Pas de connexion au serveur | 1. Ne pas lancer l'application de l'API Java<br>2. Accéder au site web<br>3.Renseignez des identifiants pour se connecter | Message d'erreur 'Erreur interne, veuillez réessayer plus tard' | OK |
+| SERV-02 | Panne de serveur | 1. Lancer l'API Java<br>2. Accéder au site web<br>3.Se connecter<br>4. Fermer l'API Java<br>5.Changer de page ou actualiser la page | Message d'erreur 'Impossible de contacter le serveur, veuillez vérifier votre réseau' | OK |
+| SERV-03 | Actualiser après une panne | 1. Lancer l'API Java<br>2. Accéder au site web<br>3.Se connecter<br>4. Fermer l'API Java<br>5.Changer de page ou actualiser la page<br>6. Relancer l'API<br>7. Cliquer sur actualiser | Les données s'affiche à nouveau | OK |

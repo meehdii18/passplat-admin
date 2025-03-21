@@ -19,6 +19,7 @@ import Grid from '@mui/material/Grid2';
 import DownloadIcon from '@mui/icons-material/Download';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PersonIcon from '@mui/icons-material/Person';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -66,29 +67,31 @@ const StatsTotales: React.FC = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const CO2_PAR_CONTENANT = 531;
     
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const response = await axios.get<Stats>('http://localhost:8080/stats');
-                setStats(response.data);
-            } catch (err) {
-                if (axios.isAxiosError(err)) {
-                    if (err.response) {
-                        setError(err.response.status >= 500 
-                            ? 'Erreur interne, veuillez réessayer plus tard'
-                            : 'Serveur inaccessible ou indisponible'
-                        );
-                    } else if (err.request) {
-                        setError('Impossible de contacter le serveur, veuillez vérifier votre réseau');
-                    } else {
-                        setError('Erreur interne, veuillez réessayer plus tard');
-                    }
+    const fetchStats = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get<Stats>('http://localhost:8080/stats');
+            setStats(response.data);
+            setError(null);
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                if (err.response) {
+                    setError(err.response.status >= 500 
+                        ? 'Erreur interne, veuillez réessayer plus tard'
+                        : 'Serveur inaccessible ou indisponible'
+                    );
+                } else if (err.request) {
+                    setError('Impossible de contacter le serveur, veuillez vérifier votre réseau');
+                } else {
+                    setError('Erreur interne, veuillez réessayer plus tard');
                 }
-            } finally {
-                setLoading(false);
             }
-        };
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchStats();
     }, []);
 
@@ -124,6 +127,15 @@ const StatsTotales: React.FC = () => {
             >
                 <Typography variant="h5" color="error" gutterBottom>Erreur</Typography>
                 <Typography>{error}</Typography>
+                <Button 
+                    variant="outlined" 
+                    color="primary" 
+                    startIcon={<RefreshIcon />}
+                    onClick={fetchStats}
+                    sx={{ mt: 3 }}
+                >
+                    Réessayer
+                </Button>
             </Container>
         );
     }
