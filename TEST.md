@@ -37,7 +37,7 @@ Ce document présente les tests fonctionnels du panneau d'administration PassPla
 | EMP-07 | Tri des emprunts | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur les en-têtes de colonnes | Les emprunts sont triés selon la colonne sélectionnée | À tester |
 | EMP-08 | Mise à jour des données d'en-tête | 1. Accéder à la page "Emprunts"<br>2. Ajouter un emprunt (EMP-03)<br>3. Vérifier que le total des emprunt a augmenté<br>4. Vérifier que le nombre d'emprunt actif augmente<br>5. Terminer l'emprunt<br>6. Vérifier que le nombre d'emprunt rendus augmente | Les données sont mise à jour | À tester |
 | EMP-09 | Retour au tableau de bord | 1. Accéder à la page "Emprunts"<br>2. Clique sur le bouton retour<br>3. Vérifier qu'on arrive bien sur la page principale| On reviens à la page principale | À tester |
-| EMP-10 | Emprunt sans stock | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur "Ajouter"<br>3. Remplir le formulaire en sélectionnant un diffuseur sans stock<br>4. Valider | Message d'erreur indiquant que le diffuseur n'a pas de stock | FAIL (message d'erreur incorrect) |
+| EMP-10 | Emprunt sans stock | 1. Accéder à la page "Emprunts"<br>2. Cliquer sur "Ajouter"<br>3. Remplir le formulaire en sélectionnant un diffuseur sans stock<br>4. Valider | Message d'erreur indiquant que le diffuseur n'a pas de stock | OK |
 
 ### 3.3 Gestion des utilisateurs
 

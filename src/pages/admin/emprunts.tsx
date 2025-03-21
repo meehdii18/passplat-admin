@@ -298,9 +298,13 @@ const AdminEmpruntPage: React.FC = () => {
             }
             setOpenDialog(false);
             fetchEmprunts();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error:', error);
-            showSnackbar('Erreur lors de la sauvegarde', 'error');
+            if (error.response?.status === 404 && error.response?.data?.message === 'Stock not found.') {
+                showSnackbar("Le diffuseur n'a pas le stock suffisant pour cet emprunt", 'error');
+            } else {
+                showSnackbar('Erreur lors de la sauvegarde', 'error');
+            }
         }
     };
 
