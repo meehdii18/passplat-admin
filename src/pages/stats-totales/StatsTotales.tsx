@@ -320,7 +320,11 @@ const StatsTotales: React.FC = () => {
                     Statistiques Générales
                 </Typography>
                 
-                <Grid container spacing={3}>
+                <Grid 
+                    container
+                    spacing={3}
+                    sx={{ justifyContent:'space-between', alignItems:'center'}}
+                >
                     {statsData.map((stat, index) => (
                         <Grid key={index} xs={12} sm={6} md={4}>
                             <Card 
@@ -387,7 +391,11 @@ const StatsTotales: React.FC = () => {
                     Détails par Type de Contenant
                 </Typography>
                 
-                <Grid container spacing={3}>
+                <Grid 
+                    container
+                    spacing={3}
+                    sx={{ justifyContent:'space-between', alignItems:'center'}}
+                >
                     <Grid xs={12} md={6}>
                         <Card 
                             elevation={0}

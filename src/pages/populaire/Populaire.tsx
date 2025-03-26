@@ -250,7 +250,8 @@ const Populaire = () => {
                     </Box>
                 </Paper>
 
-                <Grid container spacing={5}>
+                <Grid container
+                sx={{justifyContent:'space-between', alignContent:'center'}}>
                     {/* TOP EMPRUNTEURS */}
                     <Grid xs={12} md={4}>
                         <Card 
@@ -489,7 +490,6 @@ const Populaire = () => {
                                 height: '100%',
                                 borderRadius: 2,
                                 overflow: 'hidden',
-                                width: '130%',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
                                 transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                                 '&:hover': {

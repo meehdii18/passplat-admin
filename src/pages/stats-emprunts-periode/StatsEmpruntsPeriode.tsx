@@ -471,7 +471,7 @@ const StatsEmpruntsPeriode: React.FC = () => {
                                 </Box>
                             </Paper>
 
-                            <Grid container spacing={3} sx={{ mb: 4 }}>
+                            <Grid container spacing={3} sx={{ mb: 4, justifyContent:'space-between', alignItems:'center'}}>
                                 {ContainerSize.map((size) => (
                                     <Grid key={size.type} xs={12} sm={4}>
                                         <Card 
