@@ -12,7 +12,14 @@ createRoot(document.getElementById('root')!).render(
             <AuthProvider>
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
-                    <GlobalStyles styles={{ body: { backgroundColor: theme.palette.background.default } }} />
+                    <GlobalStyles styles={{ 
+                        body: { backgroundColor: theme.palette.background.default },
+                        '.MuiContainer-root': {
+                            maxWidth: '90% !important', 
+                            paddingLeft: '0 !important', 
+                            paddingRight: '0 !important',
+                        },
+                         }} />
                     <AppRoutes /> 
                 </ThemeProvider>
             </AuthProvider>
