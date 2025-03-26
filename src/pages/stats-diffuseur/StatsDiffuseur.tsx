@@ -363,17 +363,18 @@ const StatsDiffuseur: React.FC = () => {
                                 Statistiques Principales
                             </Typography>
                             
-                            <Grid container spacing={3} sx={{ mb: 4 }}>
+                            <Grid container spacing={3} sx={{ mb: 4, justifyContent:'space-between', alignItems:'center' }}>
                                 {[
                                     { label: "Nombre d'Emprunts Total", value: stats.nombreEmpruntTotal },
                                     { label: "Nombre d'Emprunts En Cours", value: stats.nombreEmpruntEnCours },
                                     { label: "Stock Contenants Total", value: stats.stockContenantTotal }
                                 ].map((stat, index) => (
-                                    <Grid key={index} xs={12} sm={6} md={4}>
+                                    <Grid key={index} xs={12} sm={6} md={6}>
                                         <Card 
                                             elevation={0}
                                             sx={{
                                                 height: '100%',
+                                                width:'100%',
                                                 borderRadius: 2,
                                                 overflow: 'hidden',
                                                 position: 'relative',
@@ -433,7 +434,8 @@ const StatsDiffuseur: React.FC = () => {
                                 Détails par Type de Contenant
                             </Typography>
                             
-                            <Grid container spacing={3}>
+                            <Grid container spacing={3}
+                            sx={{justifyContent:'space-between', alignItems:'center'}}>
                                 <Grid xs={12} md={6}>
                                     <Card 
                                         elevation={0}
@@ -465,7 +467,8 @@ const StatsDiffuseur: React.FC = () => {
                                                 </Typography>
                                             </Box>
                                             <Divider sx={{ mb: 3 }} />
-                                            <Grid container spacing={2}>
+                                            <Grid container spacing={2}
+                                                sx={{justifyContent:'space-between', alignItems:'center'}}>
                                                 {ContainerSize.map((size) => (
                                                     <Grid key={size.type} xs={4}>
                                                         <Paper
@@ -526,7 +529,8 @@ const StatsDiffuseur: React.FC = () => {
                                                 </Typography>
                                             </Box>
                                             <Divider sx={{ mb: 3 }} />
-                                            <Grid container spacing={2}>
+                                            <Grid container spacing={2}
+                                            sx={{justifyContent:'space-between', alignItems:'center'}}>
                                                 {ContainerSize.map((size) => (
                                                     <Grid key={size.type} xs={4}>
                                                         <Paper

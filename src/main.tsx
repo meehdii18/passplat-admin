@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')!).render(
                     <GlobalStyles styles={{ 
                         body: { backgroundColor: theme.palette.background.default },
                         '.MuiContainer-root': {
-                            maxWidth: '90% !important', 
+                            maxWidth: '85% !important', 
                             paddingLeft: '0 !important', 
                             paddingRight: '0 !important',
                         },
