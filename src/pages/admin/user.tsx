@@ -483,14 +483,17 @@ const AdminUserPage: React.FC = () => {
                         justifyContent: 'space-between'
                     }}
                 >                    
-                <Grid xs={12} sm={5} md={2.4}>  {/* Utilisateurs */}
+                <Grid xs={12} sm={6} md={2.4}>  {/* Utilisateurs */}
                         <Card 
                             elevation={0}
                             sx={{
-                                height: '100%',
+                                width: '10rem',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
                             <Box 
@@ -513,14 +516,14 @@ const AdminUserPage: React.FC = () => {
                                             mr: 2
                                         }}
                                     >
-                                        <PersonIcon sx={{ color: theme.palette.grey[700] }} />
+                                        <PersonIcon sx={{ color: theme.palette.grey[500]}} />
                                     </Box>
                                     <Typography variant="h5" fontWeight="bold">
                                         {users.filter(u => u.role === ROLES.USER).length}
                                     </Typography>
                                 </Box>
                                 <Typography variant="body2" color="text.secondary">
-                                    Utilisateurs standards
+                                    Utilisateurs
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -529,10 +532,13 @@ const AdminUserPage: React.FC = () => {
                     <Card 
                             elevation={0}
                             sx={{
-                                height: '100%',
+                                width: '10rem',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
                             <Box 
@@ -571,10 +577,13 @@ const AdminUserPage: React.FC = () => {
                     <Card 
                             elevation={0}
                             sx={{
-                                height: '100%',
+                                width: '10rem',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
                             <Box 
@@ -613,10 +622,13 @@ const AdminUserPage: React.FC = () => {
                     <Card 
                             elevation={0}
                             sx={{
-                                height: '100%',
+                                width: '10rem',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
                             <Box 
@@ -655,10 +667,13 @@ const AdminUserPage: React.FC = () => {
                     <Card 
                             elevation={0}
                             sx={{
-                                height: '100%',
+                                width: '10rem',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
                             <Box 
