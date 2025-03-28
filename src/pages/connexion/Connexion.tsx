@@ -53,7 +53,16 @@ const Connexion: React.FC = () => {
     };
 
     return (
-        <Container component="main" maxWidth="xs">
+        <Container 
+            component="main" 
+            maxWidth="xs"
+            sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
+            >
             <Box sx={{ textAlign: 'center' }}>
                 <img 
                     src="/logo-passplat.png" 
@@ -65,7 +74,9 @@ const Connexion: React.FC = () => {
                 marginTop: 8,
                 display: 'flex',
                 flexDirection: 'column',
+                justifyContent:'center',
                 alignItems: 'center',
+                maxWidth: '30rem',
             }}>
                 <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
                     <Typography component="h1" variant="h3" align="center">
