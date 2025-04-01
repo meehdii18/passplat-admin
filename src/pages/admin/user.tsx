@@ -52,6 +52,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import LockIcon from '@mui/icons-material/Lock';
 import SaveIcon from '@mui/icons-material/Save';
+import RestoreIcon from '@mui/icons-material/Restore';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid2';
@@ -173,6 +174,10 @@ const AdminUserPage: React.FC = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [newPassword, setNewPassword] = useState('');
+    const [deletedFilter, setDeletedFilter] = useState<'active' | 'deleted' | 'all'>('active');
+    const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
+    const [userToReactivate, setUserToReactivate] = useState<number | null>(null);
+
 
     useEffect(() => {
         fetchUsers();
@@ -216,18 +221,38 @@ const AdminUserPage: React.FC = () => {
     const handleDeleteConfirm = async () => {
         if (userToDelete) {
             try {
-                await axios.patch(`http://localhost:8080/account/delete/${userToDelete}`);
+                await axios.patch(`http://localhost:8080/account/disable/${userToDelete}`);
                 fetchUsers();
-                showSnackbar('Utilisateur supprimé avec succès', 'success');
+                showSnackbar('Utilisateur désactivé avec succès', 'success');
             } catch (error) {
-                console.error('Error deleting user:', error);
-                showSnackbar('Erreur lors de la suppression', 'error');
+                console.error('Error disabling user:', error);
+                showSnackbar('Erreur lors de la désactivation', 'error');
             }
         }
         setDeleteDialogOpen(false);
         setUserToDelete(null);
     };
     
+    const handleReactivateClick = (userId: number) => {
+        setUserToReactivate(userId);
+        setReactivateDialogOpen(true);
+    };
+
+    const handleReactivateConfirm = async () => {
+        if (userToReactivate) {
+            try {
+                await axios.patch(`http://localhost:8080/account/enable/${userToReactivate}`);
+                fetchUsers();
+                showSnackbar('Utilisateur réactivé avec succès', 'success');
+            } catch (error) {
+                console.error('Error reactivating user:', error);
+                showSnackbar('Erreur lors de la réactivation', 'error');
+            }
+        }
+        setReactivateDialogOpen(false);
+        setUserToReactivate(null);
+    };
+
     const handleBack = () => {
         navigate('/');
     };
@@ -281,8 +306,14 @@ const AdminUserPage: React.FC = () => {
             user.tel.includes(searchQuery);
             
         const matchesRole = roleFilter === null || user.role === roleFilter;
+        
+        // Filtre selon le statut (actif/supprimé)
+        const matchesDeletedStatus = 
+            deletedFilter === 'all' || 
+            (deletedFilter === 'active' && user.estSupprime === 0) || 
+            (deletedFilter === 'deleted' && user.estSupprime === 1);
             
-        return matchesSearch && matchesRole;
+        return matchesSearch && matchesRole && matchesDeletedStatus;
     });
 
     const sortData = (data: User[]) => {
@@ -777,6 +808,24 @@ const AdminUserPage: React.FC = () => {
                                     <MenuItem value={ROLES.BOTH}>Diffuseurs/Collecteurs</MenuItem>
                                 </Select>
                             </FormControl>
+                            <FormControl 
+                                size="small" 
+                                variant="outlined" 
+                                sx={{ 
+                                    width: isMobile ? '100%' : 220,
+                                }}
+                            >
+                                <InputLabel>Statut du compte</InputLabel>
+                                <Select
+                                    value={deletedFilter}
+                                    onChange={(e) => setDeletedFilter(e.target.value as 'active' | 'deleted' | 'all')}
+                                    label="Statut du compte"
+                                >
+                                    <MenuItem value="active">Comptes actifs</MenuItem>
+                                    <MenuItem value="deleted">Comptes désactivés</MenuItem>
+                                    <MenuItem value="all">Tous les comptes</MenuItem>
+                                </Select>
+                            </FormControl>
                         </Box>
                         
                         <Box sx={{ 
@@ -966,21 +1015,40 @@ const AdminUserPage: React.FC = () => {
                                                         <EditIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
-                                                <Tooltip title="Supprimer">
-                                                    <IconButton 
-                                                        onClick={() => handleDeleteClick(user.id)}
-                                                        size="small"
-                                                        sx={{ 
-                                                            color: theme.palette.error.main,
-                                                            bgcolor: alpha(theme.palette.error.main, 0.1),
-                                                            '&:hover': {
-                                                                bgcolor: alpha(theme.palette.error.main, 0.2)
-                                                            }
-                                                        }}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                
+                                                {user.estSupprime === 0 ? (
+                                                    <Tooltip title="Désactiver">
+                                                        <IconButton 
+                                                            onClick={() => handleDeleteClick(user.id)}
+                                                            size="small"
+                                                            sx={{ 
+                                                                color: theme.palette.error.main,
+                                                                bgcolor: alpha(theme.palette.error.main, 0.1),
+                                                                '&:hover': {
+                                                                    bgcolor: alpha(theme.palette.error.main, 0.2)
+                                                                }
+                                                            }}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <Tooltip title="Réactiver">
+                                                        <IconButton 
+                                                            onClick={() => handleReactivateClick(user.id)}
+                                                            size="small"
+                                                            sx={{ 
+                                                                color: theme.palette.success.main,
+                                                                bgcolor: alpha(theme.palette.success.main, 0.1),
+                                                                '&:hover': {
+                                                                    bgcolor: alpha(theme.palette.success.main, 0.2)
+                                                                }
+                                                            }}
+                                                        >
+                                                            <RestoreIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
                                             </Box>
                                         </TableCell>
                                     </TableRow>
@@ -1211,11 +1279,11 @@ const AdminUserPage: React.FC = () => {
                 }}
             >
                 <DialogTitle sx={{ fontWeight: 'bold', color: theme.palette.error.main }}>
-                    Confirmer la suppression
+                    Confirmer la désactivation
                 </DialogTitle>
                 <DialogContent>
                     <Typography>
-                        Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action ne peut pas être annulée.
+                        Êtes-vous sûr de vouloir désactiver cet utilisateur ? Il n'apparaîtra plus dans les listes principales.
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, py: 2 }}>
@@ -1233,7 +1301,7 @@ const AdminUserPage: React.FC = () => {
                         startIcon={<DeleteIcon />}
                         sx={{ borderRadius: '8px', boxShadow: 2 }}
                     >
-                        Supprimer
+                        Désactiver
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -1426,6 +1494,43 @@ const AdminUserPage: React.FC = () => {
                         sx={{ borderRadius: '8px', boxShadow: 2 }}
                     >
                         Enregistrer
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Dialog de réactivation */}
+            <Dialog
+                open={reactivateDialogOpen}
+                onClose={() => setReactivateDialogOpen(false)}
+                PaperProps={{
+                    elevation: 8,
+                    sx: { borderRadius: 2 }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 'bold', color: theme.palette.success.main }}>
+                    Confirmer la réactivation
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Êtes-vous sûr de vouloir réactiver cet utilisateur ?
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button 
+                        onClick={() => setReactivateDialogOpen(false)} 
+                        variant="outlined"
+                        sx={{ borderRadius: '8px' }}
+                    >
+                        Annuler
+                    </Button>
+                    <Button 
+                        onClick={handleReactivateConfirm} 
+                        variant="contained" 
+                        color="success"
+                        startIcon={<RestoreIcon />}
+                        sx={{ borderRadius: '8px', boxShadow: 2 }}
+                    >
+                        Réactiver
                     </Button>
                 </DialogActions>
             </Dialog>
